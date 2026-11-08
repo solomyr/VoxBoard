@@ -95,12 +95,23 @@ extension WatchDictationService: WCSessionDelegate {
 
   /// Short recordings: an interactive message, answered directly.
   nonisolated func session(_: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    if let text = message["copy"] as? String {
+      Task { @MainActor in UIPasteboard.general.string = text }
+      replyHandler(["copied": true])
+      return
+    }
     let id = message["id"] as? String ?? ""
     let audio = message["audio"] as? Data ?? Data()
     let reply = UncheckedReply(send: replyHandler)
     Task { @MainActor in
       reply.send(await WatchDictationService.shared.process(audio: audio, id: id))
     }
+  }
+
+  /// "Copy to iPhone" sent while the phone was not reachable.
+  nonisolated func session(_: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+    guard let text = userInfo["copy"] as? String else { return }
+    Task { @MainActor in UIPasteboard.general.string = text }
   }
 
   /// Longer recordings: a file transfer, answered with a message or a queued transfer.

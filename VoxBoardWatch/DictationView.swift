@@ -21,11 +21,22 @@ struct DictationView: View {
           Text(reply.text).frame(maxWidth: .infinity, alignment: .leading)
           ShareLink(item: reply.text) { Label("Send", systemImage: "paperplane.fill") }
             .tint(.accentColor)
+          Button {
+            Task {
+              if await WatchLink.shared.copyToPhone(reply.text) {
+                WKInterfaceDevice.current().play(.success)
+                self.copied = true
+              }
+            }
+          } label: {
+            Label(self.copied ? "Copied to iPhone" : "Copy to iPhone", systemImage: self.copied ? "checkmark" : "doc.on.doc")
+          }
           if reply.original != reply.text {
             Button("Use original") { self.state = .done(.init(text: reply.original, original: reply.original)) }
           }
           Button("New message") {
             WatchLink.shared.clearLastReply()
+            self.copied = false
             self.state = .idle
           }
         case .failed(let message):
@@ -51,6 +62,7 @@ struct DictationView: View {
   }
 
   @State private var state = DictationState.idle
+  @State private var copied = false
   @State private var recorder = WatchRecorder()
 
   private func micButton(recording: Bool) -> some View {

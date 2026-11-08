@@ -47,6 +47,27 @@ final class WatchLink: NSObject, WCSessionDelegate {
     WCSession.default.activate()
   }
 
+  /// The Watch has no clipboard, so copying puts the text on the iPhone's
+  /// clipboard (and, with Universal Clipboard, on your Mac and iPad too).
+  func copyToPhone(_ text: String) async -> Bool {
+    self.activate()
+    return await Self.sendCopy(text, on: WCSession.default)
+  }
+
+  private nonisolated static func sendCopy(_ text: String, on session: WCSession) async -> Bool {
+    guard session.isReachable else {
+      session.transferUserInfo(["copy": text])
+      return true
+    }
+    return await withCheckedContinuation { continuation in
+      session.sendMessage(["copy": text], replyHandler: { _ in continuation.resume(returning: true) },
+                          errorHandler: { _ in
+                            session.transferUserInfo(["copy": text])
+                            continuation.resume(returning: true)
+                          })
+    }
+  }
+
   func clearLastReply() {
     UserDefaults.standard.removeObject(forKey: "lastReply.text")
     UserDefaults.standard.removeObject(forKey: "lastReply.original")
