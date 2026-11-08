@@ -5,9 +5,7 @@ import Foundation
 @MainActor
 final class WatchRecorder {
   func start() async throws {
-    let granted = await withCheckedContinuation { continuation in
-      AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
-    }
+    let granted = await Self.requestPermission()
     guard granted else { throw RecorderError.denied }
     let session = AVAudioSession.sharedInstance()
     try session.setCategory(.record, mode: .default)
@@ -33,6 +31,13 @@ final class WatchRecorder {
     let data = try? Data(contentsOf: recorder.url)
     try? FileManager.default.removeItem(at: recorder.url)
     return data
+  }
+
+  /// Nonisolated so the permission callback, which arrives on a background queue, cannot trap.
+  private nonisolated static func requestPermission() async -> Bool {
+    await withCheckedContinuation { continuation in
+      AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
+    }
   }
 
   var isRecording: Bool { self.recorder?.isRecording == true }

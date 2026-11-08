@@ -78,17 +78,22 @@ final class WatchLink: NSObject, WCSessionDelegate {
   private func send(_ audio: Data, id: String) {
     let session = WCSession.default
     if audio.count <= Self.messageLimit, session.isReachable {
-      session.sendMessage(["id": id, "audio": audio], replyHandler: { reply in
-        Task { @MainActor in WatchLink.shared.handle(reply) }
-      }, errorHandler: { error in
-        // The phone may still answer through the queued path; only fail if nothing else can.
-        Task { @MainActor in
-          WatchLink.shared.sendAsFile(audio, id: id, after: error)
-        }
-      })
+      Self.sendMessage(audio, id: id, on: session)
     } else {
       self.sendAsFile(audio, id: id, after: nil)
     }
+  }
+
+  /// Nonisolated on purpose: WatchConnectivity calls these handlers on a
+  /// background queue, and closures formed on the main actor would trap there.
+  private nonisolated static func sendMessage(_ audio: Data, id: String, on session: WCSession) {
+    session.sendMessage(["id": id, "audio": audio], replyHandler: { reply in
+      let box = MessageBox(reply)
+      Task { @MainActor in WatchLink.shared.handle(box.value) }
+    }, errorHandler: { _ in
+      // Fall back to a file transfer; the phone answers through the queued path.
+      Task { @MainActor in WatchLink.shared.sendAsFile(audio, id: id, after: nil) }
+    })
   }
 
   private func sendAsFile(_ audio: Data, id: String, after _: (any Error)?) {

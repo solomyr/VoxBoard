@@ -109,17 +109,24 @@ extension WatchDictationService: WCSessionDelegate {
     let audio = (try? Data(contentsOf: file.fileURL)) ?? Data()
     Task { @MainActor in
       let result = await WatchDictationService.shared.process(audio: audio, id: id)
-      let session = WCSession.default
-      if session.isReachable {
-        session.sendMessage(result, replyHandler: nil) { _ in session.transferUserInfo(result) }
-      } else {
-        session.transferUserInfo(result)
-      }
+      WatchDictationService.deliver(result)
     }
   }
 }
 
 extension WatchDictationService {
+  /// Nonisolated on purpose: WatchConnectivity calls the error handler on a
+  /// background queue, and a closure formed on the main actor would trap there.
+  nonisolated static func deliver(_ result: [String: Any]) {
+    let session = WCSession.default
+    let box = ReplyBox(result)
+    if session.isReachable {
+      session.sendMessage(result, replyHandler: nil) { _ in session.transferUserInfo(box.value) }
+    } else {
+      session.transferUserInfo(result)
+    }
+  }
+
   /// Runs a request with background time and tags the reply with its id.
   func process(audio: Data, id: String) async -> [String: Any] {
     let task = UIApplication.shared.beginBackgroundTask(withName: "Watch dictation")
@@ -132,4 +139,9 @@ extension WatchDictationService {
 
 private struct UncheckedReply: @unchecked Sendable {
   let send: ([String: Any]) -> Void
+}
+
+private struct ReplyBox: @unchecked Sendable {
+  let value: [String: Any]
+  init(_ value: [String: Any]) { self.value = value }
 }
