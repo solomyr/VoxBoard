@@ -61,5 +61,4 @@ children.
 ## Changes and contact
 
 If this policy changes, the new version will be published at this address.
-Questions: open an issue at https://github.com/solomyr/VoxBoard/issues or email
-devoar@gmail.com.
+Questions: open an issue at https://github.com/solomyr/VoxBoard/issues.
