@@ -77,7 +77,7 @@ The small sparkle button cleans up text before the cursor. It wakes VoxBoard on 
 
 ## Model downloads
 
-`Sayboard/Resources/model-manifest.json` pins the upstream catalog retrieved on 2026-11-06. The catalog itself loads locally. Archive URLs still use **models.sayboard.app**, an upstream development dependency, not VoxBoard-controlled hosting. No voice or message text is uploaded there.
+`Sayboard/Resources/model-manifest.json` pins the upstream catalog retrieved on 2026-11-06. The catalog itself loads locally. Archives are mirrored unchanged on Hugging Face at [devoar/voxboard-models](https://huggingface.co/devoar/voxboard-models), with each model's upstream license listed there; the app verifies every archive's SHA-256. No voice or message text is uploaded.
 
 Before public distribution, arrange reliable, permitted model hosting, review each model's redistribution license, and update the URLs/checksums. Model weights have separate licenses. For your own remote catalog, set `VoxBoardModelManifestURL` in the app Info.plist to an HTTPS URL using the same schema.
 

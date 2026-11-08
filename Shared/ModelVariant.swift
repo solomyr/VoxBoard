@@ -278,7 +278,7 @@ extension Int {
 }
 
 enum ModelServer {
-  static let baseURL = "https://models.sayboard.app"
+  static let baseURL = "https://huggingface.co/devoar/voxboard-models/resolve/main"
   static let manifestPath = "/manifest.json"
   static let manifestURL = "\(baseURL)\(manifestPath)"
 }

@@ -2,77 +2,77 @@
   "version": 1,
   "models": {
     "openai_whisper-tiny": {
-      "url": "https://models.sayboard.app/whisperkit/openai_whisper-tiny.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/whisperkit/openai_whisper-tiny.zip",
       "sha256": "4ea5bcf5acc14b315b64294a242510846f0f568ccfe31f70fbdbc2e053714283",
       "sizeBytes": 69191152,
       "engine": "whisperKit",
       "expandedBytes": 76635397
     },
     "openai_whisper-base": {
-      "url": "https://models.sayboard.app/whisperkit/openai_whisper-base.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/whisperkit/openai_whisper-base.zip",
       "sha256": "45c2bae836e2036e5d3639d0447561a484a1c3720135294a300c360f890486f0",
       "sizeBytes": 132453626,
       "engine": "whisperKit",
       "expandedBytes": 146719453
     },
     "openai_whisper-small": {
-      "url": "https://models.sayboard.app/whisperkit/openai_whisper-small.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/whisperkit/openai_whisper-small.zip",
       "sha256": "5de0c8cd198b63e34e312b66f3a3c453fd17c320ae8c062c2b944b26a0566089",
       "sizeBytes": 445039562,
       "engine": "whisperKit",
       "expandedBytes": 486487465
     },
     "parakeet-tdt-0.6b-v2": {
-      "url": "https://models.sayboard.app/parakeet/parakeet-tdt-0.6b-v2-coreml.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/parakeet/parakeet-tdt-0.6b-v2-coreml.zip",
       "sha256": "5d50f5a85cb194eb763790c61c5abb78b11f852348865c137ffebd5c03052325",
       "sizeBytes": 450272408,
       "engine": "parakeet",
       "expandedBytes": 464413250
     },
     "parakeet-tdt-0.6b-v3": {
-      "url": "https://models.sayboard.app/parakeet/parakeet-tdt-0.6b-v3-coreml.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/parakeet/parakeet-tdt-0.6b-v3-coreml.zip",
       "sha256": "5ae440a798e35a308e9eeed8b8880cac660da6e378d67a3b2b1af1224f6d24cd",
       "sizeBytes": 477316682,
       "engine": "parakeet",
       "expandedBytes": 495761847
     },
     "moonshine-tiny-en": {
-      "url": "https://models.sayboard.app/moonshine/moonshine-tiny-en.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/moonshine/moonshine-tiny-en.zip",
       "sha256": "247238bf6f0e6aea4d58d7e540b7939df3651c142341590be9d5a72a0042c049",
       "sizeBytes": 28894239,
       "engine": "moonshine",
       "expandedBytes": 43943830
     },
     "moonshine-base-en": {
-      "url": "https://models.sayboard.app/moonshine/moonshine-base-en.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/moonshine/moonshine-base-en.zip",
       "sha256": "bee091eb88f77b3c7e4efc40dc4ea618164dc432a314ba24f608c2e615a10976",
       "sizeBytes": 107080695,
       "engine": "moonshine",
       "expandedBytes": 141001190
     },
     "moonshine-tiny-streaming-en": {
-      "url": "https://models.sayboard.app/moonshine/moonshine-tiny-streaming-en.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/moonshine/moonshine-tiny-streaming-en.zip",
       "sha256": "358a3663196c711304d5c92b622801ef63218c679c02df6321ce14cbb14df90a",
       "sizeBytes": 33056251,
       "engine": "moonshine",
       "expandedBytes": 51131795
     },
     "moonshine-small-streaming-en": {
-      "url": "https://models.sayboard.app/moonshine/moonshine-small-streaming-en.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/moonshine/moonshine-small-streaming-en.zip",
       "sha256": "f90f4bd38f2e1f9064df10def6be6424c61d489a6cab7546075812f5a6363794",
       "sizeBytes": 104820867,
       "engine": "moonshine",
       "expandedBytes": 164689974
     },
     "moonshine-medium-streaming-en": {
-      "url": "https://models.sayboard.app/moonshine/moonshine-medium-streaming-en.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/moonshine/moonshine-medium-streaming-en.zip",
       "sha256": "e8a796661638e7e3bcefbc93cf76276e33561a20a5b138ad40253b85a4e340c8",
       "sizeBytes": 201672702,
       "engine": "moonshine",
       "expandedBytes": 303329727
     },
     "openai_whisper-large-v3-v20240930_turbo_632MB": {
-      "url": "https://models.sayboard.app/whisperkit/openai_whisper-large-v3-v20240930_turbo_632MB.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/whisperkit/openai_whisper-large-v3-v20240930_turbo_632MB.zip",
       "sha256": "cf3d27de09bf5749e4d31367b33d4d508a7e17ebbf52bb744fb62aafe5669b08",
       "sizeBytes": 477741348,
       "engine": "whisperKit",
@@ -81,44 +81,44 @@
   },
   "llmModels": {
     "qwen3-0.6b-q5km": {
-      "url": "https://models.sayboard.app/llm/qwen3-0.6b-q5km.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/qwen3-0.6b-q5km.zip",
       "sha256": "87fe06ebef3cf348e1fa5307abbf1ff6e867436bbd25f3cbcbe2711577745d4f",
       "sizeBytes": 551378530
     },
     "gemma3-1b-q5km": {
-      "url": "https://models.sayboard.app/llm/gemma3-1b-q5km.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/gemma3-1b-q5km.zip",
       "sha256": "5eaf9f613fe3cab4f4940dc5e659b8126dbcd372bfde91fdc5a0dd56e43528bc",
       "sizeBytes": 851346112
     },
     "llama32-1b-q5km": {
-      "url": "https://models.sayboard.app/llm/llama32-1b-q5km.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/llama32-1b-q5km.zip",
       "sha256": "98225ebaa1f90825aacfbd40bd80fe9bd43a4b777869f9cf8049ee7e9ba9dfb3",
       "sizeBytes": 911503686
     },
     "smollm2-1.7b-q4km": {
-      "url": "https://models.sayboard.app/llm/smollm2-1.7b-q4km.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/smollm2-1.7b-q4km.zip",
       "sha256": "53c346a87e51d3647dbfa130ba2690c5cb2fed50aebcbc2635d928a886cac607",
       "sizeBytes": 1055610022
     },
     "qwen3-1.7b-q8": {
-      "url": "https://models.sayboard.app/llm/qwen3-1.7b-q8.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/qwen3-1.7b-q8.zip",
       "sha256": "05575ef6b6560b4e4d470529f12a21638d5caaa737372a8301263a9b1efd9fe6",
       "sizeBytes": 2165039710
     },
     "qwen35-0.8b-q4km": {
-      "url": "https://models.sayboard.app/llm/qwen35-0.8b-q4km.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/qwen35-0.8b-q4km.zip",
       "sha256": "9aff312bb24b9fc756f52c23b5472c48b0e38f5e8596491c6cad6602d9c63dab",
       "sizeBytes": 562649057,
       "minLlamaBuild": 9180
     },
     "qwen35-2b-q5km": {
-      "url": "https://models.sayboard.app/llm/qwen35-2b-q5km.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/qwen35-2b-q5km.zip",
       "sha256": "21e131ebb5ead1b986b5b0aabfa87a9555cad03f62cb2973da26856fd4ca0080",
       "sizeBytes": 1540105674,
       "minLlamaBuild": 9180
     },
     "gemma3-1b-qat-q4_0": {
-      "url": "https://models.sayboard.app/llm/gemma3-1b-qat-q4_0.zip",
+      "url": "https://huggingface.co/devoar/voxboard-models/resolve/main/llm/gemma3-1b-qat-q4_0.zip",
       "sha256": "3d3e3196162e989e303c6e7c979e8edc21476b5d950dc2a79525a21a1acb8f72",
       "sizeBytes": 720425924
     }
