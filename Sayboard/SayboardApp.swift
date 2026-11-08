@@ -124,7 +124,23 @@ private struct ModelSelectionObserver: ViewModifier {
 }
 
 @MainActor
-private final class AppServices {
+final class AppServices {
+  static let shared = AppServices()
+
+  /// Connects the services to each other. Safe to call more than once; the
+  /// Watch path can run before any screen appears when iOS wakes the app.
+  func wireIfNeeded() {
+    guard !self.isWired else { return }
+    self.isWired = true
+    self.speechService.downloadService = self.downloadService
+    self.downloadService.modelLoader = self.speechService
+    self.llmCoordinator.speechService = self.speechService
+    self.llmCoordinator.downloadService = self.llmDownloadService
+    self.llmCoordinator.setupObservers()
+  }
+
+  private var isWired = false
+
   let speechService = SpeechRecognitionService()
   let playerService = AudioPlayerService()
   let downloadService = ModelDownloadService()
@@ -157,6 +173,7 @@ struct SayboardApp: App {
     #endif
     Self.markOnboardingCompleteForEstablishedInstall()
     NewNameNotice().settleAtLaunch()
+    WatchDictationService.shared.activate()
   }
 
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -167,7 +184,7 @@ struct SayboardApp: App {
     }
   }
 
-  @StateObject private var services = UnobservedOwner(AppServices())
+  @StateObject private var services = UnobservedOwner(AppServices.shared)
 
   private static func markOnboardingCompleteForEstablishedInstall() {
     guard !UserDefaults.standard.bool(forKey: SharedKey.hasCompletedOnboarding) else { return }
@@ -341,14 +358,10 @@ private struct SayboardRootView: View {
     OnboardingRecordStore().forgetFinishedPostponements(
       SetupChecklist(permissions: self.permissionService, hasUsableModel: SharedSettings().hasUsableModel)
     )
-    self.speechService.downloadService = self.downloadService
-    self.downloadService.modelLoader = self.speechService
+    AppServices.shared.wireIfNeeded()
 
     self.llmDownloadService.verifyExistingModels()
     self.llmDownloadService.checkForInterruptedDownloadOnLaunch()
-    self.llmCoordinator.speechService = self.speechService
-    self.llmCoordinator.downloadService = self.llmDownloadService
-    self.llmCoordinator.setupObservers()
 
     let settings = SharedSettings()
     if settings.isLLMProcessing {

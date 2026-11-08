@@ -122,3 +122,18 @@ extension SpeechRecognitionService {
     self.historySaveGeneration += 1
   }
 }
+
+extension SpeechRecognitionService {
+  /// Transcribes samples for the Watch, without touching keyboard or history state.
+  func transcribeForWatch(samples: [Float]) async -> String? {
+    let result: TranscriptionResult =
+      switch self.settings.selectedVariant.engine {
+      case .whisperKit: await self.whisperService.transcribe(audioSamples: samples)
+      case .parakeet: await self.parakeetService.transcribe(audioSamples: samples)
+      case .moonshine: await self.moonshineService.transcribe(audioSamples: samples)
+      }
+    guard case .text(let output) = result else { return nil }
+    let text = TextSanitizer.sanitize(output.text)
+    return text.isEmpty ? nil : text
+  }
+}
