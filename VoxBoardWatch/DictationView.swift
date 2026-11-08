@@ -24,7 +24,10 @@ struct DictationView: View {
           if reply.original != reply.text {
             Button("Use original") { self.state = .done(.init(text: reply.original, original: reply.original)) }
           }
-          Button("New message") { self.state = .idle }
+          Button("New message") {
+            WatchLink.shared.clearLastReply()
+            self.state = .idle
+          }
         case .failed(let message):
           Text(message).font(.footnote).multilineTextAlignment(.center)
           Button("Try again") { self.state = .idle }
@@ -33,7 +36,12 @@ struct DictationView: View {
       .padding(.horizontal, 4)
     }
     .navigationTitle("VoxBoard")
-    .onAppear { WatchLink.shared.activate() }
+    .onAppear {
+      WatchLink.shared.activate()
+      WatchLink.shared.onLateReply = { reply in self.state = .done(reply) }
+      // A result that arrived while the app was closed.
+      if case .idle = self.state, let reply = WatchLink.shared.lastReply { self.state = .done(reply) }
+    }
   }
 
   private enum DictationState {

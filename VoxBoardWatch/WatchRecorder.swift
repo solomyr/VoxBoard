@@ -18,7 +18,7 @@ final class WatchRecorder {
       AVFormatIDKey: kAudioFormatMPEG4AAC,
       AVSampleRateKey: 16_000,
       AVNumberOfChannelsKey: 1,
-      AVEncoderBitRateKey: 32_000,
+      AVEncoderBitRateKey: 16_000,
     ])
     guard recorder.record(forDuration: 120) else { throw RecorderError.failed }
     self.recorder = recorder

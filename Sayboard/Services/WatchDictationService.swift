@@ -48,7 +48,10 @@ final class WatchDictationService: NSObject {
     var text = original
     let settings = SharedSettings()
     services.llmDownloadService.verifyExistingModels()
-    if settings.llmEnabled, settings.defaultLLMActionSelection.isSet, services.llmDownloadService.hasUsableModel,
+    // In the background iOS allows only about 30 seconds; skip polishing rather than lose the text.
+    let app = UIApplication.shared
+    let hasTime = app.applicationState != .background || app.backgroundTimeRemaining > 18
+    if hasTime, settings.llmEnabled, settings.defaultLLMActionSelection.isSet, services.llmDownloadService.hasUsableModel,
        let polished = await services.llmCoordinator.polish(original) {
       text = polished
     }
@@ -90,17 +93,43 @@ extension WatchDictationService: WCSessionDelegate {
   nonisolated func sessionDidBecomeInactive(_: WCSession) {}
   nonisolated func sessionDidDeactivate(_ session: WCSession) { session.activate() }
 
-  nonisolated func session(_: WCSession, didReceiveMessageData messageData: Data, replyHandler: @escaping (Data) -> Void) {
+  /// Short recordings: an interactive message, answered directly.
+  nonisolated func session(_: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    let id = message["id"] as? String ?? ""
+    let audio = message["audio"] as? Data ?? Data()
     let reply = UncheckedReply(send: replyHandler)
     Task { @MainActor in
-      let task = UIApplication.shared.beginBackgroundTask(withName: "Watch dictation")
-      defer { if task != .invalid { UIApplication.shared.endBackgroundTask(task) } }
-      let result = await WatchDictationService.shared.handle(audio: messageData)
-      reply.send((try? JSONEncoder().encode(result)) ?? Data())
+      reply.send(await WatchDictationService.shared.process(audio: audio, id: id))
+    }
+  }
+
+  /// Longer recordings: a file transfer, answered with a message or a queued transfer.
+  nonisolated func session(_: WCSession, didReceive file: WCSessionFile) {
+    let id = file.metadata?["id"] as? String ?? ""
+    let audio = (try? Data(contentsOf: file.fileURL)) ?? Data()
+    Task { @MainActor in
+      let result = await WatchDictationService.shared.process(audio: audio, id: id)
+      let session = WCSession.default
+      if session.isReachable {
+        session.sendMessage(result, replyHandler: nil) { _ in session.transferUserInfo(result) }
+      } else {
+        session.transferUserInfo(result)
+      }
     }
   }
 }
 
+extension WatchDictationService {
+  /// Runs a request with background time and tags the reply with its id.
+  func process(audio: Data, id: String) async -> [String: Any] {
+    let task = UIApplication.shared.beginBackgroundTask(withName: "Watch dictation")
+    defer { if task != .invalid { UIApplication.shared.endBackgroundTask(task) } }
+    var result: [String: Any] = await self.handle(audio: audio)
+    result["id"] = id
+    return result
+  }
+}
+
 private struct UncheckedReply: @unchecked Sendable {
-  let send: (Data) -> Void
+  let send: ([String: Any]) -> Void
 }
