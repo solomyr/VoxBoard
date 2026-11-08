@@ -33,7 +33,7 @@ struct DictationOutcomeLabel: View {
   private var message: LocalizedStringKey {
     switch self.outcome {
     case .noSpeech: "No speech recognized. Try speaking again"
-    case .engineFailed: "Dictation failed. Try a different speech model in Altboard"
+    case .engineFailed: "Dictation failed. Try a different speech model in VoxBoard"
     }
   }
 }

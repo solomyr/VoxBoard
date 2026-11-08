@@ -49,6 +49,7 @@ final class KeyboardViewController: UIInputViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    self.keyboardState.hasFullAccess = self.hasFullAccess
     self.keyboardState.bootstrapLayoutSettings()
     Self.activeInstance = self
     self.setupTranscriptionObserver()
@@ -72,6 +73,7 @@ final class KeyboardViewController: UIInputViewController {
     self.keyboardState.isTranslationMode = SharedSettings().isTranslationMode
     self.updateKeyboardHeight(actionBarVisible: false)
     self.syncFullAccessIfChanged()
+    self.syncTypingContext()
     self.pingMainAppForSessionStatus()
     self.pingValidator.startIfNeeded(for: self.keyboardState)
     self.keyboardState.appearedAt = CFAbsoluteTimeGetCurrent()
@@ -148,6 +150,7 @@ final class KeyboardViewController: UIInputViewController {
   private func syncFullAccessIfChanged() {
     let current = self.hasFullAccess
     self.keyboardState.hasFullAccess = current
+    self.keyboardState.refreshTypingLanguage()
     guard !self.hasPerformedInitialFullAccessSync || current != self.lastSyncedFullAccess else { return }
     self.hasPerformedInitialFullAccessSync = true
     self.lastSyncedFullAccess = current
@@ -271,7 +274,7 @@ final class KeyboardViewController: UIInputViewController {
     settings.synchronize()
 
     let heartbeatAge = CFAbsoluteTimeGetCurrent() - settings.mainAppHeartbeat
-    if heartbeatAge > Self.heartbeatStaleThreshold {
+    if !self.keyboardState.isSessionActive || heartbeatAge > Self.heartbeatStaleThreshold {
       self.openDictateDeepLinkFallback(reason: "heartbeat stale (\(heartbeatAge)s)")
       return
     }
@@ -297,6 +300,7 @@ final class KeyboardViewController: UIInputViewController {
   }
 
   private func openDictateDeepLinkFallback(reason _: String) {
+    self.saveHostBundleId()
     let settings = SharedSettings()
     settings.isSessionActive = false
     settings.keyboardRequestedDictationAt = CFAbsoluteTimeGetCurrent()
@@ -305,12 +309,9 @@ final class KeyboardViewController: UIInputViewController {
     settings.synchronize()
     self.keyboardState.isSessionActive = false
     self.keyboardState.isProcessing = false
+    self.keyboardState.sessionSetupRequired = false
     guard let url = DeepLink.dictateURL else { return }
-    if let openAction = self.keyboardState.openURLAction {
-      openAction(url)
-    } else {
-      self.openURL(url)
-    }
+    self.openURL(url)
   }
 
 }
@@ -355,11 +356,13 @@ extension KeyboardViewController {
       DispatchQueue.main.async {
         guard let vc = Self.activeInstance else { return }
         let _ = vc.keyboardState.isSessionActive
-        vc.cancelProcessingTimeout()
         vc.keyboardState.stopLevelPolling()
         vc.keyboardState.isSessionActive = false
         vc.keyboardState.isRecording = false
-        vc.keyboardState.isProcessing = false
+        // Releasing the mic is the start of inference, not its completion.
+        if !vc.keyboardState.isProcessing, !vc.keyboardState.isLLMProcessing {
+          vc.cancelProcessingTimeout()
+        }
       }
     }
   }
@@ -437,14 +440,20 @@ extension KeyboardViewController {
     KeyboardProxy(
       insertText: { [weak self] text in
         self?.previousSpaceTap = nil
+        self?.keyboardState.clearLLMHistory()
         self?.textDocumentProxy.insertText(text)
+        self?.syncTypingContext()
       },
       insertSpace: { [weak self] in
+        self?.keyboardState.clearLLMHistory()
         self?.insertSpace()
+        self?.syncTypingContext()
       },
       deleteBackward: { [weak self] in
         self?.previousSpaceTap = nil
+        self?.keyboardState.clearLLMHistory()
         self?.textDocumentProxy.deleteBackward()
+        self?.syncTypingContext()
       },
       deleteAll: { [weak self] in
         self?.previousSpaceTap = nil
@@ -471,6 +480,7 @@ extension KeyboardViewController {
       adjustTextPosition: { [weak self] offset in
         self?.previousSpaceTap = nil
         self?.textDocumentProxy.adjustTextPosition(byCharacterOffset: offset)
+        self?.syncTypingContext()
       },
       undoLLM: { [weak self] in self?.undoLLM() },
       redoLLM: { [weak self] in self?.redoLLM() },
@@ -519,7 +529,34 @@ extension KeyboardViewController {
   override func textDidChange(_ textInput: (any UITextInput)?) {
     super.textDidChange(textInput)
     self.syncInputModeSwitchKey()
+    self.syncTypingContext()
     self.insertDeferredAppearanceText()
+  }
+
+  override func selectionDidChange(_ textInput: (any UITextInput)?) {
+    super.selectionDidChange(textInput)
+    self.previousSpaceTap = nil
+    self.syncTypingContext()
+  }
+
+  private func syncTypingContext() {
+    let capitalization: TypingCapitalization = switch self.textDocumentProxy.autocapitalizationType ?? .sentences {
+    case .none: .none
+    case .words: .words
+    case .allCharacters: .allCharacters
+    case .sentences: .sentences
+    @unknown default: .sentences
+    }
+    self.keyboardState.typing.updateContext(before: self.textDocumentProxy.documentContextBeforeInput, capitalization: capitalization)
+    self.keyboardState.returnKeyLabel = switch self.textDocumentProxy.returnKeyType ?? .default {
+    case .go: "go"
+    case .search, .google, .yahoo: "search"
+    case .send: "send"
+    case .done: "done"
+    case .next: "next"
+    case .join: "join"
+    default: "return"
+    }
   }
 
   override func viewDidAppear(_ animated: Bool) {

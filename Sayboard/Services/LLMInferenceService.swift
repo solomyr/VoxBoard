@@ -37,7 +37,7 @@ final class LLMInferenceService: ObservableObject {
   @Published private(set) var loadState = LLMLoadState.unloaded
 
   nonisolated static func generationBudget(promptTokens: Int, batchSize: Int, contextSize: Int) -> Int? {
-    guard promptTokens <= batchSize else { return nil }
+    guard promptTokens > 0, batchSize > 0 else { return nil }
     let budget = contextSize - promptTokens - self.contextReserveTokens
     return budget > 0 ? budget : nil
   }
@@ -47,7 +47,12 @@ final class LLMInferenceService: ObservableObject {
     self.loadState = .loading
     self.currentVariant = variant
 
+    #if targetEnvironment(simulator)
+    // Simulator processes have no iOS jetsam budget; the API can return zero.
+    let availableMemory = ProcessInfo.processInfo.physicalMemory
+    #else
     let availableMemory = os_proc_available_memory()
+    #endif
     let requiredMemory = UInt64(Double(variant.ramRequirementMB.megabytesInBytes) * Self.memoryCheckSafetyMultiplier)
     if availableMemory < requiredMemory {
       let availableMB = availableMemory / 1_000_000
@@ -143,14 +148,19 @@ final class LLMInferenceService: ObservableObject {
     let sendableModel = SendablePointer(pointer: model)
     let sendableCtx = SendablePointer(pointer: context)
 
-    return await Task.detached(priority: .userInitiated) {
+    let worker = Task.detached(priority: .userInitiated) {
       Self.runInference(
         model: sendableModel.pointer,
         context: sendableCtx.pointer,
         variant: variant,
         prompt: prompt,
       )
-    }.value
+    }
+    return await withTaskCancellationHandler {
+      await worker.value
+    } onCancel: {
+      worker.cancel()
+    }
   }
 
   private struct Prompt: Sendable {
@@ -163,7 +173,7 @@ final class LLMInferenceService: ObservableObject {
 
   private nonisolated static let pieceBufferSize = 64
 
-  private nonisolated static let generationDeadlineSeconds: TimeInterval = 15
+  private nonisolated static let generationDeadlineSeconds: TimeInterval = 60
   private nonisolated static let memoryCheckSafetyMultiplier = 1.2
   private nonisolated static let temperature: Float = 0.3
   private nonisolated static let topP: Float = 0.9
@@ -212,7 +222,7 @@ final class LLMInferenceService: ObservableObject {
 
     llama_memory_clear(llama_get_memory(context), true)
 
-    var batch = llama_batch_init(Int32(tokens.count), 0, 1)
+    var batch = llama_batch_init(Int32(batchSize), 0, 1)
     defer { llama_batch_free(batch) }
 
     guard self.decodePrompt(context: context, batch: &batch, tokens: tokens) else { return nil }
@@ -235,7 +245,8 @@ final class LLMInferenceService: ObservableObject {
         + "peak footprint \(ProcessFootprint.residentMB())MB"
     )
 
-    guard let answer = template.answer(from: generated.text), !answer.isEmpty else {
+    guard generated.stoppedAtEOS,
+      let answer = template.answer(from: generated.text), !answer.isEmpty else {
       DiagnosticLog.write("llm: FAILED, no answer extracted from reply")
       return nil
     }
@@ -270,11 +281,15 @@ final class LLMInferenceService: ObservableObject {
     batch: inout llama_batch,
     tokens: [llama_token],
   ) -> Bool {
-    for (i, token) in tokens.enumerated() {
-      self.batchAdd(&batch, token: token, pos: Int32(i), seqIds: [0], logits: i == tokens.count - 1)
-    }
-    guard llama_decode(context, batch) == 0 else {
-      return false
+    let batchSize = Int(llama_n_batch(context))
+    for start in stride(from: 0, to: tokens.count, by: batchSize) {
+      guard !Task.isCancelled else { return false }
+      batch.n_tokens = 0
+      let end = min(start + batchSize, tokens.count)
+      for i in start ..< end {
+        self.batchAdd(&batch, token: tokens[i], pos: Int32(i), seqIds: [0], logits: i == tokens.count - 1)
+      }
+      guard llama_decode(context, batch) == 0 else { return false }
     }
     return true
   }
@@ -291,7 +306,8 @@ final class LLMInferenceService: ObservableObject {
     }
     defer { llama_sampler_free(sampler) }
 
-    var outputPieces = [String]()
+    var outputBytes = [UInt8]()
+    var generatedTokenCount = 0
     var currentPos = startPos
     var stoppedAtEOS = false
     var hitDeadline = false
@@ -320,8 +336,9 @@ final class LLMInferenceService: ObservableObject {
       }
 
       if let piece = self.piece(vocab: vocab, token: newToken) {
-        outputPieces.append(piece)
+        outputBytes.append(contentsOf: piece)
       }
+      generatedTokenCount += 1
 
       batch.n_tokens = 0
       self.batchAdd(&batch, token: newToken, pos: currentPos, seqIds: [0], logits: true)
@@ -332,21 +349,25 @@ final class LLMInferenceService: ObservableObject {
       }
     }
 
-    guard !hitDeadline else { return nil }
+    guard !hitDeadline, !Task.isCancelled, stoppedAtEOS else { return nil }
 
-    let raw = outputPieces.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+    // A UTF-8 character can span tokens, especially in multilingual output.
+    let raw = String(decoding: outputBytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     DiagnosticLog.write(
-      "llm: generation done, \(outputPieces.count) tok in \(Self.elapsed(since: startedAt))s, eos=\(stoppedAtEOS)"
+      "llm: generation done, \(generatedTokenCount) tok in \(Self.elapsed(since: startedAt))s, eos=\(stoppedAtEOS)"
     )
     return (text: raw, stoppedAtEOS: stoppedAtEOS)
   }
 
-  private nonisolated static func piece(vocab: OpaquePointer?, token: llama_token) -> String? {
+  private nonisolated static func piece(vocab: OpaquePointer?, token: llama_token) -> [UInt8]? {
     var buffer = [CChar](repeating: 0, count: self.pieceBufferSize)
-    let written = llama_token_to_piece(vocab, token, &buffer, Int32(self.pieceBufferSize), 0, true)
+    var written = llama_token_to_piece(vocab, token, &buffer, Int32(buffer.count), 0, true)
+    if written < 0 {
+      buffer = [CChar](repeating: 0, count: Int(-written))
+      written = llama_token_to_piece(vocab, token, &buffer, Int32(buffer.count), 0, true)
+    }
     guard written > 0 else { return nil }
-    let bytes = buffer.prefix(Int(written)).map { UInt8(bitPattern: $0) }
-    return String(bytes: bytes, encoding: .utf8)
+    return buffer.prefix(Int(written)).map { UInt8(bitPattern: $0) }
   }
 
   private nonisolated static func makeSampler() -> UnsafeMutablePointer<llama_sampler>? {

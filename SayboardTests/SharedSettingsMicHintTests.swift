@@ -88,7 +88,7 @@ struct SharedSettingsMicHintTests {
   private static let beforeTheMarkExpires: TimeInterval = 29 * 60
 
   private static func makeSettings() throws -> SharedSettings {
-    let suiteName = "app.sayboard.tests.\(UUID().uuidString)"
+    let suiteName = "app.voxboard.tests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defaults.removePersistentDomain(forName: suiteName)
     return SharedSettings(defaults: defaults)

@@ -15,6 +15,7 @@ struct KeyboardLayoutPreview: View {
   })
 
   let kind: KeyboardKind
+  @StateObject private var typing = TypingKeyboardModel()
 
   var body: some View {
     VStack(spacing: 0) {
@@ -23,7 +24,7 @@ struct KeyboardLayoutPreview: View {
       case .extended: self.extendedLayout
       }
     }
-    .padding(.top, Self.topPadding)
+    .padding(.top, self.kind == .standard ? 0 : Self.topPadding)
     .frame(width: Self.width, height: Self.size(for: self.kind).height, alignment: .top)
     .background(Self.backdrop)
     .accessibilityHidden(true)
@@ -34,7 +35,7 @@ struct KeyboardLayoutPreview: View {
   }
 
   private static let width: CGFloat = 390
-  private static let standardHeight: CGFloat = 240
+  private static let standardHeight: CGFloat = 256
   private static let extendedHeight: CGFloat = 289.5
   private static let topPadding: CGFloat = 14.5
   private static let rowSpacing: CGFloat = 8.5
@@ -62,25 +63,12 @@ struct KeyboardLayoutPreview: View {
   private static let punctuationRow = [".", ",", "?", "!", "'"]
 
   private var standardLayout: some View {
-    VStack(spacing: Self.rowSpacing) {
-      ZStack(alignment: .top) {
-        HStack(alignment: .bottom) {
-          self.symbolKey("gearshape", width: Self.sideKeyWidth)
-          Spacer(minLength: 0)
-          self.symbolKey("delete.left", width: Self.sideKeyWidth)
-        }
-        .frame(maxHeight: .infinity, alignment: .bottom)
-        MicMorphShape(frameIndex: 0)
-          .fill(.primary)
-          .frame(width: Self.micGlyph.width, height: Self.micGlyph.height)
-          .frame(width: Self.micDiameter, height: Self.micDiameter)
-          .background(Self.keyFill, in: Circle())
-          .padding(.top, Self.micTop)
-      }
-      .padding(.horizontal, Self.edgeInset)
-      .frame(height: Self.micRowHeight)
-      self.bottomRow
-    }
+    TypingKeyboardView(
+      model: self.typing,
+      onInsert: { _ in }, onSpace: {}, onDelete: {}, onMoveCursor: { _ in }, onLanguageChange: { _ in },
+      toolbar: { Spacer(); Text("VoxBoard").font(.caption); Spacer(); Image(systemName: "mic.fill") },
+      globe: { Image(systemName: "globe") },
+    ).allowsHitTesting(false)
   }
 
   private var extendedLayout: some View {

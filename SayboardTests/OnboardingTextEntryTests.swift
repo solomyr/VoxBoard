@@ -26,7 +26,7 @@ struct OnboardingTextEntryTests {
   private static let lastApp = "ph.telegra.Telegraph"
 
   private static func storeStyling(_ bundleId: String, as style: WritingStyle) throws -> AppStyleStore {
-    let suiteName = "app.sayboard.tests.\(UUID().uuidString)"
+    let suiteName = "app.voxboard.tests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defaults.removePersistentDomain(forName: suiteName)
     let store = AppStyleStore(defaults: defaults)

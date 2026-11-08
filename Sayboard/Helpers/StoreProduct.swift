@@ -1,4 +1,4 @@
 
 enum StoreProduct {
-  static let fullVersionID = "app.sayboard.fullversion"
+  static let fullVersionID = "app.voxboard.fullversion"
 }

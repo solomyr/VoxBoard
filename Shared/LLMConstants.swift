@@ -202,9 +202,11 @@ enum LLMModelVariant: String, CaseIterable, Identifiable, Codable, Sendable {
 
   var contextSize: Int {
     switch self {
-    case .gemma3OneQAT, .gemma3One, .llama32One, .qwen3Small, .qwen35Small:
-      1024
-    case .smollm2Medium, .qwen3Large, .qwen35Large:
+    case .qwen35Small, .qwen35Large:
+      4096
+    case .gemma3OneQAT, .gemma3One, .llama32One, .qwen3Small:
+      2048
+    case .smollm2Medium, .qwen3Large:
       2048
     }
   }
@@ -228,6 +230,7 @@ enum LLMModelVariant: String, CaseIterable, Identifiable, Codable, Sendable {
 }
 
 enum LLMAction: String, CaseIterable, Codable, Sendable {
+  case readyToSend
   case removeRedundancy
   case rewrite
   case formal
@@ -243,6 +246,7 @@ enum LLMAction: String, CaseIterable, Codable, Sendable {
 
   var displayNameKey: String {
     switch self {
+    case .readyToSend: "Ready to send"
     case .removeRedundancy: "Remove redundancy"
     case .rewrite: "Rewrite"
     case .formal: "Formal"

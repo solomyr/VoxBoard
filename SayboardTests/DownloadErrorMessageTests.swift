@@ -68,7 +68,7 @@ struct DownloadErrorMessageTests {
 
   @Test
   func `app too old wins over everything else`() {
-    #expect(localizedDownloadError(R2DownloadError.appTooOldForModel) == "Update Altboard to use this model.")
+    #expect(localizedDownloadError(R2DownloadError.appTooOldForModel) == "Update VoxBoard to use this model.")
   }
 
   @Test

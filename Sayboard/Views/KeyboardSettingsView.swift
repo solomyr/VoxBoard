@@ -22,6 +22,17 @@ struct KeyboardSettingsView: View {
         }
       }
       Section {
+        Picker("Typing language", selection: self.$keyboardLanguage) {
+          ForEach(KeyboardLanguage.allCases) { language in
+            Text(verbatim: language.name).tag(language.rawValue)
+          }
+        }
+        NavigationLink("Try the keyboard") { KeyboardTypingPreview() }
+          .accessibilityIdentifier("keyboard.preview.open")
+      } footer: {
+        Text("You can also switch languages directly above the keyboard. Hold a letter for accents. Slide across Space to move the cursor.")
+      }
+      Section {
         Toggle("“.” Shortcut", isOn: self.$periodShortcutEnabled)
       } footer: {
         Text("Double tapping the space bar will insert a period followed by a space.")
@@ -39,4 +50,6 @@ struct KeyboardSettingsView: View {
   private var needsInputModeSwitchKey = true
   @AppStorage(SharedKey.periodShortcutEnabled, store: UserDefaults(suiteName: AppGroup.identifier))
   private var periodShortcutEnabled = true
+  @AppStorage(SharedKey.keyboardLanguage, store: UserDefaults(suiteName: AppGroup.identifier))
+  private var keyboardLanguage = KeyboardLanguage.english.rawValue
 }

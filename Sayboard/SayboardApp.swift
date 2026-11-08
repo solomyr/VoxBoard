@@ -9,9 +9,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, @unchecked Sendable {
 
   @MainActor static var pendingPreShowHint = false
 
-  static let deepLinkNotification = Notification.Name("app.sayboard.sceneDeepLink")
+  static let deepLinkNotification = Notification.Name("app.voxboard.sceneDeepLink")
 
-  static let preShowHintNotification = Notification.Name("app.sayboard.preShowHostReturnHint")
+  static let preShowHintNotification = Notification.Name("app.voxboard.preShowHostReturnHint")
 
   func application(
     _: UIApplication,
@@ -87,7 +87,7 @@ private enum DeepLinkValidator {
   @MainActor
   static func isFromKeyboard() -> Bool {
     let settings = SharedSettings()
-    if let source = AppDelegate.lastSourceApplication, source == "app.sayboard.keyboard" {
+    if let source = AppDelegate.lastSourceApplication, source == "app.voxboard.keyboard" {
       _ = settings.consumeKeyboardRequestIfRecent()
       return true
     }
@@ -229,7 +229,8 @@ private struct SayboardRootView: View {
   private static let hostResolvePollInterval = 50
 
   private static var shouldPresentOnboarding: Bool {
-    !UserDefaults.standard.bool(forKey: SharedKey.hasCompletedOnboarding)
+    // Composition is usable without installing the optional keyboard extension.
+    false
   }
 
   @ObservedObject private var speechService: SpeechRecognitionService
@@ -331,6 +332,7 @@ private struct SayboardRootView: View {
   }
 
   private func handleAppear() {
+    DiagnosticLog.exportToAppDocuments()
     BackgroundDownloadManager.shared.restoreSession()
     self.applyGlobalAnimationSpeed()
     self.downloadService.verifyExistingModels()
@@ -442,11 +444,16 @@ private struct SayboardRootView: View {
       }
       Task { await self.speechService.stopRecording() }
 
+    case DeepLink.polishHost:
+      guard DeepLinkValidator.isFromKeyboard() else { return }
+      Task { await self.llmCoordinator.handleProcessingRequest() }
+      self.returnToHostWhenResolved()
+
     case DeepLink.settingsHost, DeepLink.unlockHost:
       break
 
     case DeepLink.modelsHost:
-      self.activateSessionIfNeeded()
+      break
 
     case DeepLink.setupMicHost:
       if self.scenePhase == .active {
@@ -471,15 +478,9 @@ private struct SayboardRootView: View {
     }
   }
 
-  private func activateSessionIfNeeded() {
-    guard !self.speechService.session.isSessionActive else { return }
-    guard self.downloadService.hasUsableModel else { return }
-    do {
-      try self.speechService.session.startSession()
-    } catch { }
-  }
-
   private func handleDictateDeepLink() {
+    DiagnosticLog.write("dictation handoff: host=\(SharedSettings().hostBundleId ?? "unknown")")
+    DiagnosticLog.exportToAppDocuments()
     SharedSettings().dictationSessionToken = UUID().uuidString
 
     let staysInApp = OnboardingTextEntry.isVisible
@@ -516,7 +517,7 @@ private struct SayboardRootView: View {
   private func tryStartDictation() -> Bool {
     let isRec = self.speechService.isRecording
 
-    guard !isRec else { return false }
+    guard !isRec, !self.speechService.isStopping, !self.llmCoordinator.isProcessing else { return false }
 
     guard !SharedSettings().isDictationLocked else {
       NotificationCenter.default.post(name: .purchaseScreenRequested, object: nil)
@@ -536,6 +537,7 @@ private struct SayboardRootView: View {
 
     self.speechService.startCapture()
     guard self.speechService.isRecording else {
+      self.speechService.session.endSession()
       return false
     }
     return true
@@ -588,7 +590,9 @@ private struct SayboardRootView: View {
     guard let hostId else {
       return
     }
-    let _ = HostAppOpener.open(bundleId: hostId)
+    let opened = HostAppOpener.open(bundleId: hostId)
+    DiagnosticLog.write("return to host: \(hostId) accepted=\(opened)")
+    DiagnosticLog.exportToAppDocuments()
   }
 
 }

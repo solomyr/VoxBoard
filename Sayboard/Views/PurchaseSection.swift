@@ -21,10 +21,10 @@ struct PurchaseSection: View {
   }
 
   private static let footerMessage: LocalizedStringKey = """
-    Altboard includes \(DictationAllowance.freeWords) free words of dictation so you can try it at your own pace. \
+    VoxBoard includes \(DictationAllowance.freeWords) free words of dictation so you can try it at your own pace. \
     If you enjoy it, a one-time purchase keeps dictation going once they run out and supports its development, \
     and we are sincerely grateful for it. \
-    If you would rather not pay, Altboard is open source, and you can build it yourself free of charge.
+    If you would rather not pay, VoxBoard is open source, and you can build it yourself free of charge.
     """
 
   @AppStorage(SharedKey.entitlementStatus, store: UserDefaults(suiteName: AppGroup.identifier))

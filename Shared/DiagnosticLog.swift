@@ -33,11 +33,21 @@ enum DiagnosticLog {
     #endif
   }
 
+  static func exportToAppDocuments() {
+    #if DEBUG
+    guard let source = self.fileURL,
+      let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+      let data = try? Data(contentsOf: source)
+    else { return }
+    try? data.write(to: documents.appendingPathComponent("voxboard-diagnostics.log"), options: [.atomic, .completeFileProtection])
+    #endif
+  }
+
   private static let fileName = "ios27-diagnostic.log"
 
   private static let maxBytes = 512 * 1024
 
-  private static let queue = DispatchQueue(label: "app.sayboard.diagnosticLog")
+  private static let queue = DispatchQueue(label: "app.voxboard.diagnosticLog")
 
   private static let processTag = ProcessInfo.processInfo.processName
 

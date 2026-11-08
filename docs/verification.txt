@@ -1,0 +1,87 @@
+VoxBoard verification — 2026-11-06
+Xcode 27.2; iPhone 18 Pro simulator, iOS 27.0.
+Real Qwen 3.5 0.8B and Whisper Tiny weights; model archive hashes verified.
+Speech integration test rejects HTTP requests using URLProtocol.
+
+VoxBoard local model: hello Maria we will meet at 18:30 tomorrow please bring 2 books → Hello Maria, we will meet at 18:30 tomorrow. Please bring 2 books.
+VoxBoard local model: утре ще се видим в 18:30 моля донеси 2 книги → Утре ще се видим в 18:30. Моля, дадете 2 книги.
+VoxBoard local model: 明日の18:30に会いましょう資料を2部持ってきてください → 明日の 18:30 に会いましょう。資料を 2 部持ってきてください。
+VoxBoard offline speech-to-text-to-LLM: Please send the meeting notes tomorrow morning. → Please send the meeting notes tomorrow morning.
+✔ Test run with 431 tests in 53 suites passed after 26.025 seconds.
+** TEST SUCCEEDED **
+
+Unsigned iPhone Release build: SUCCEEDED
+
+Remaining public-release work:
+- Hands-on microphone permission and cross-app keyboard testing across supported iOS versions.
+- VoxBoard-controlled model hosting and review of weight redistribution licenses.
+- Public source repository and App Store listing/review.
+- Evaluate text quality across intended languages; small LLMs can introduce wording errors.
+
+String catalog lint: one inherited Latvian translation needs_review warning.
+
+Physical-device delivery — 2026-11-06
+iPhone 17 Pro, iOS 27.3 (24C5037i), wired connection, Developer Mode enabled.
+Apple development signing configured for the chosen paid developer team.
+Application and keyboard profiles both include group.app.voxboard.shared and the connected phone.
+Release application and embedded keyboard: codesign --verify --deep --strict passed.
+
+Preloaded models, with archive SHA-256 verified before transfer:
+- Whisper Small: 5de0c8cd198b63e34e312b66f3a3c453fd17c320ae8c062c2b944b26a0566089
+- Qwen 3.5 2B Q5_K_M: 21e131ebb5ead1b986b5b0aabfa87a9555cad03f62cb2973da26856fd4ca0080
+Both models discovered by the installed app; Qwen 3.5 2B selected.
+
+Final physical-device test result: Passed; 432 passed, 0 failed, 1 skipped (433 total).
+The optional Qwen 0.8B test was skipped because the phone has the larger 2B model.
+Real local model checks: English, Bulgarian, Japanese, Spanish, Arabic, and mixed Bulgarian/English.
+An initial mixed-language numeric-format regression led to tighter editing instructions; retesting passed.
+Mixed-language result: Здравей, Maria. See you at 18:30, донеси 2 книги.
+Real Whisper Small -> Qwen 2B audio-fixture test passed with HTTP requests rejected.
+Compose UI test passed: type, polish, copy, open share sheet without sending, relaunch, verify persistence, clear.
+Full test command returned TEST SUCCEEDED. Xcode's separate diagnostic-bundle collection reported an error;
+this did not affect test execution or the successful test result.
+
+Final signed Release build succeeded. A development IPA is in build/delivery/VoxBoard.ipa.
+Standalone dictation now releases its microphone session after recording; an explicitly enabled keyboard session is retained.
+The owner still grants microphone permission and enables the optional keyboard/Full Access in iOS Settings.
+The live microphone and destination-app keyboard interaction were not automated; audio-file inference and compose UI were tested on hardware.
+
+
+Typing keyboard and microphone update — 2026-11-08
+Version 0.2.0 (24), signed Release installed over the existing app on the iPhone 17 Pro.
+Existing models and saved drafts preserved. Temporary UI test runner removed afterward.
+
+- English QWERTY, Bulgarian phonetic/BDS, and nine additional language layouts.
+- In-keyboard language chooser, inline long-press accents, shift/caps, symbols, repeat delete, cursor slide.
+- Keyboard typing works with microphone off. The small mic displays on-demand guidance when no session is active.
+- Compose recording releases AVAudioEngine and AVAudioSession before local transcription starts.
+- Background dictation is an explicit, in-memory opt-in; default idle timeout is 5 minutes.
+- Keyboard mic-off control, Compose control, and Settings can end it. Relaunch/interruption never restores it.
+- Removed microphone activation from Models links and corrected misleading upstream session information.
+- Dictate with VoxBoard App Shortcut metadata is included with foreground execution and device authentication.
+  Action Button assignment and invocation through Siri/Shortcuts still require hands-on verification.
+
+Verification:
+- iPhone simulator: 435 unit tests passed, 2 audio-hardware tests skipped without microphone permission;
+  typing UI test passed (English, Bulgarian phonetic/BDS, French accents, shift, numbers, delete).
+- iPad mini simulator: the same typing UI test passed and screenshot inspected.
+- Physical iPhone: both microphone lifecycle tests passed with microphone permission already granted.
+  Assertions checked the actual AVAudioEngine running state and shared session state.
+- Physical iPhone: background session -> installed keyboard mic-off -> app relaunch remains off: passed.
+- Physical iPhone: actual keyboard extension typed English and Bulgarian, explicit Shift, deletion,
+  French long-press accent, and inactive-mic guidance without hiding the letter keys: passed.
+  Typing was tested in the app's isolated preview field, not a real message to another person.
+- Real Whisper Small -> Qwen 3.5 2B pipeline passed with HTTP requests rejected.
+  Multilingual Qwen checks also passed; optional 0.8B check skipped because that model is not on the phone.
+- Final Release build succeeded; app and embedded extension passed strict code-signature verification.
+- String lint passed with the one inherited Latvian needs_review warning; git diff --check passed.
+- Some device runs reported a separate Xcode diagnostic-bundle collection error after test execution;
+  final test command returned TEST SUCCEEDED.
+
+Evidence on the development Mac:
+/tmp/voxboard-final-regression-tests.log
+/tmp/voxboard-keyboard-final-ipad-tests.log
+/tmp/voxboard-keyboard-final-phone-tests.log (contains the passing background mic-off and preview checks)
+/tmp/voxboard-phone-delivery-checks.log (final passing extension, model, and hardware checks)
+/tmp/voxboard-final-release.log
+Screenshots: docs/screenshots/typing-extension-iphone.png, typing-iphone-device.png, typing-ipad.png.

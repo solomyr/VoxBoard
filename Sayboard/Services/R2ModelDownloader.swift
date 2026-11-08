@@ -16,7 +16,7 @@ enum R2DownloadError: LocalizedError {
     case .manifestMissingVariant(let name):
       "Model '\(name)' not found in manifest"
     case .appTooOldForModel:
-      "This model needs a newer version of Altboard"
+      "This model needs a newer version of VoxBoard"
     case .sha256Mismatch(let expected, let actual):
       "SHA256 mismatch: expected \(expected), got \(actual)"
     case .extractionFailed(let error):

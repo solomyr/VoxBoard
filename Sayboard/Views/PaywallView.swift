@@ -71,11 +71,11 @@ struct PaywallView: View {
 
   private static let pitch: LocalizedStringKey = """
     A one-time purchase unlocks unlimited dictation and AI text processing for good \
-    and supports Altboard’s development.
+    and supports VoxBoard’s development.
     """
 
   private static let sourceCodeMessage: LocalizedStringKey = """
-    Altboard is open source. If you would rather not pay, you can build it yourself for free.
+    VoxBoard is open source. If you would rather not pay, you can build it yourself for free.
     """
 
   private static let sourceCodeURL = URL(string: "https://github.com/Altboard/Altboard")
@@ -95,7 +95,7 @@ struct PaywallView: View {
         .font(.system(size: 56))
         .foregroundStyle(.pink)
         .accessibilityHidden(true)
-      Text("Support Altboard")
+      Text("Support VoxBoard")
         .font(.largeTitle.bold())
       Text(Self.pitch)
         .foregroundStyle(.secondary)

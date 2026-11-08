@@ -72,7 +72,6 @@ struct SettingsView: View, Equatable {
   init() {
     let shared = SharedSettings()
     _selectedRetentionPolicy = State(initialValue: shared.retentionPolicy)
-    _selectedAutoStopPolicy = State(initialValue: shared.sessionAutoStopPolicy)
     _selectedKeyboardKind = State(initialValue: shared.keyboardKind)
   }
 
@@ -107,12 +106,6 @@ struct SettingsView: View, Equatable {
       HistoryStore.shared.applyRetentionPolicy()
       self.refreshHistoryInfo()
     }
-    .onChange(of: self.selectedAutoStopPolicy) { _, newValue in
-      self.settings.sessionAutoStopPolicy = newValue
-      if self.speechService.isSessionActive {
-        self.speechService.session.updateTimeout()
-      }
-    }
     .onChange(of: self.selectedKeyboardKind) { _, newValue in
       self.settings.keyboardKind = newValue
     }
@@ -135,8 +128,11 @@ struct SettingsView: View, Equatable {
   @EnvironmentObject private var speechService: SpeechRecognitionService
   @EnvironmentObject private var permissionService: PermissionService
   @State private var settings = SharedSettings()
+  @AppStorage(SharedKey.keepsKeyboardMicReady, store: UserDefaults(suiteName: AppGroup.identifier))
+  private var keepsKeyboardMicReady = true
+  @AppStorage(SharedKey.sessionAutoStopPolicy, store: UserDefaults(suiteName: AppGroup.identifier))
+  private var sessionAutoStopPolicy = SessionAutoStopPolicy.fifteenMinutes
   @State private var selectedRetentionPolicy: HistoryRetentionPolicy
-  @State private var selectedAutoStopPolicy: SessionAutoStopPolicy
   @State private var selectedKeyboardKind: KeyboardKind
   @State private var showClearHistoryConfirmation = false
   @State private var showClearCacheConfirmation = false
@@ -151,22 +147,7 @@ struct SettingsView: View, Equatable {
 
   private let clearCacheMessage: LocalizedStringKey = "Compiled models will be removed from cache. Recompilation will be required on next use, which may take up to a minute."
 
-  private let sessionFooterMessage: LocalizedStringKey = "Allows the keyboard to start dictation instantly, without switching to the app. The orange dot in the status bar is normal \u{2014} it means the mic session is active."
-
   private let lowStorageMessage: LocalizedStringKey = "When storage runs low, your device may clear the prepared speech model, forcing a slow rebuild before dictation. Free up space in Settings \u{203A} General \u{203A} Storage."
-
-  private var sessionBinding: Binding<Bool> {
-    Binding(
-      get: { self.speechService.isSessionActive },
-      set: { newValue in
-        if newValue {
-          try? self.speechService.session.startSession()
-        } else {
-          self.speechService.session.endSession()
-        }
-      },
-    )
-  }
 
   private var setupChecklist: SetupChecklist {
     SetupChecklist(permissions: self.permissionService, hasUsableModel: self.hasUsableModel)
@@ -184,7 +165,7 @@ struct SettingsView: View, Equatable {
       Text("\u{26A0}\u{FE0F} Action Required")
     } footer: {
       if !self.setupChecklist.isComplete {
-        Text("Altboard won’t work until these settings are configured")
+        Text("Finish these steps to use voice input from the keyboard. Normal typing and Compose are available separately.")
       }
     }
   }
@@ -222,20 +203,28 @@ struct SettingsView: View, Equatable {
 
   private var sessionSection: some View {
     Section {
-      Toggle("Active Session", isOn: self.sessionBinding)
-        .tint(.orange)
-      Picker("Auto-Stop", selection: self.$selectedAutoStopPolicy) {
-        ForEach(SessionAutoStopPolicy.allCases, id: \.self) { policy in
-          Text(LocalizedStringKey(policy.displayNameKey)).tag(policy)
+      Toggle("Instant keyboard dictation", isOn: self.$keepsKeyboardMicReady)
+        .onChange(of: self.keepsKeyboardMicReady) { _, enabled in
+          if !enabled { self.speechService.session.endSession() }
         }
+      if self.keepsKeyboardMicReady {
+        Picker("Keep microphone ready", selection: self.$sessionAutoStopPolicy) {
+          ForEach(SessionAutoStopPolicy.allCases, id: \.self) { policy in
+            Text(LocalizedStringKey(policy.displayNameKey)).tag(policy)
+          }
+        }
+        .onChange(of: self.sessionAutoStopPolicy) { _, _ in self.speechService.session.updateTimeout() }
       }
-      NavigationLink("Active Session Info") {
-        SessionInfoView()
+      if self.speechService.isSessionActive, !self.speechService.isRecording {
+        Button("Turn microphone off now", role: .destructive) { self.speechService.session.endSession() }
       }
+      NavigationLink("How microphone access works") { SessionInfoView() }
     } header: {
-      Text("Dictation")
+      Text("Keyboard dictation")
     } footer: {
-      Text(self.sessionFooterMessage)
+      Text(self.keepsKeyboardMicReady
+        ? "After the first recording, the keyboard records in place without opening VoxBoard until the microphone has been idle for the time above. Nothing is captured until you tap the mic, but iOS shows the orange microphone indicator while VoxBoard is ready."
+        : "The microphone turns off after every recording, so each keyboard recording briefly opens VoxBoard.")
     }
   }
 
@@ -296,6 +285,7 @@ struct SettingsView: View, Equatable {
             .foregroundStyle(.secondary)
         }
       }
+      .accessibilityIdentifier("settings.keyboard")
     }
   }
 

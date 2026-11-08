@@ -36,8 +36,8 @@ final class BackgroundDownloadManager: NSObject, URLSessionDownloadDelegate, @un
   }
 
   static let shared = BackgroundDownloadManager()
-  static let sessionIdentifier = "app.sayboard.background-downloads"
-  static let upgradeSessionIdentifier = "app.sayboard.background-upgrades"
+  static let sessionIdentifier = "app.voxboard.background-downloads"
+  static let upgradeSessionIdentifier = "app.voxboard.background-upgrades"
 
   let eventSubject = PassthroughSubject<DownloadEvent, Never>()
 
@@ -301,7 +301,7 @@ final class BackgroundDownloadManager: NSObject, URLSessionDownloadDelegate, @un
 
   private static let discretionaryResourceTimeout: TimeInterval = 7 * 24 * 3600
 
-  private let processingQueue = DispatchQueue(label: "app.sayboard.download-processing")
+  private let processingQueue = DispatchQueue(label: "app.voxboard.download-processing")
 
   private var systemCompletionHandlers = [String: () -> Void]()
 

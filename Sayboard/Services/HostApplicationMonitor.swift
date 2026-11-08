@@ -29,8 +29,8 @@ enum HostApplicationMonitor {
 
   private static let ignoredHosts: Set = [
     "com.apple.springboard",
-    "app.sayboard",
-    "app.sayboard.keyboard",
+    "app.voxboard",
+    "app.voxboard.keyboard",
   ]
 
   private static let changedSelector = NSSelectorFromString("queue_keyboardChanged:onComplete:")

@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppGroup {
-  static let identifier = "group.app.sayboard.shared"
+  static let identifier = "group.app.voxboard.shared"
 
   static var containerURL: URL? {
     FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
@@ -13,7 +13,9 @@ enum AppGroup {
 }
 
 enum DeepLink {
-  static let scheme = "sayboard"
+  static let scheme = "voxboard"
+  static let polishHost = "polish"
+  static var polishURL: URL? { URL(string: "\(scheme)://\(polishHost)") }
   static let dictateHost = "dictate"
   static let stopHost = "stop"
   static let settingsHost = "settings"
@@ -54,6 +56,7 @@ enum SharedKey {
   static let isSessionActive = "isSessionActive"
   static let mainAppHeartbeat = "mainAppHeartbeat"
   static let sessionAutoStopPolicy = "sessionAutoStopPolicy"
+  static let keepsKeyboardMicReady = "keepsKeyboardMicReady"
   static let whisperKitModelPath = "whisperKitModelPath"
   static let hostBundleId = "hostBundleId"
   static let canResolveHostApplication = "canResolveHostApplication"
@@ -97,6 +100,7 @@ enum SharedKey {
   static let needsInputModeSwitchKey = "needsInputModeSwitchKey"
   static let alsoCopyToClipboard = "alsoCopyToClipboard"
   static let keyboardKind = "keyboardKind"
+  static let keyboardLanguage = "keyboardLanguage"
   static let keyboardHapticsEnabled = "keyboardHapticsEnabled"
   static let periodShortcutEnabled = "periodShortcutEnabled"
   static let entitlementStatus = "entitlementStatus"
@@ -148,22 +152,23 @@ enum HistoryRetentionPolicy: String, CaseIterable, Sendable {
 }
 
 enum DarwinNotificationName {
-  static let transcriptionReady = "app.sayboard.transcriptionReady"
-  static let dictationStarted = "app.sayboard.dictationStarted"
-  static let dictationStopped = "app.sayboard.dictationStopped"
-  static let requestStartDictation = "app.sayboard.requestStartDictation"
-  static let requestStopDictation = "app.sayboard.requestStopDictation"
-  static let sessionStarted = "app.sayboard.sessionStarted"
-  static let sessionEnded = "app.sayboard.sessionEnded"
-  static let requestSessionStatus = "app.sayboard.requestSessionStatus"
-  static let fullAccessChanged = "app.sayboard.fullAccessChanged"
-  static let modelLoadingFailed = "app.sayboard.modelLoadingFailed"
-  static let requestLLMProcessing = "app.sayboard.requestLLMProcessing"
-  static let llmProcessingStarted = "app.sayboard.llmProcessingStarted"
-  static let llmProcessingComplete = "app.sayboard.llmProcessingComplete"
-  static let llmProcessingFailed = "app.sayboard.llmProcessingFailed"
-  static let dictationLockChanged = "app.sayboard.dictationLockChanged"
-  static let keyboardShownInPractice = "app.sayboard.keyboardShownInPractice"
+  static let transcriptionReady = "app.voxboard.transcriptionReady"
+  static let dictationStarted = "app.voxboard.dictationStarted"
+  static let dictationStopped = "app.voxboard.dictationStopped"
+  static let requestStartDictation = "app.voxboard.requestStartDictation"
+  static let requestStopDictation = "app.voxboard.requestStopDictation"
+  static let sessionStarted = "app.voxboard.sessionStarted"
+  static let sessionEnded = "app.voxboard.sessionEnded"
+  static let requestEndSession = "app.voxboard.requestEndSession"
+  static let requestSessionStatus = "app.voxboard.requestSessionStatus"
+  static let fullAccessChanged = "app.voxboard.fullAccessChanged"
+  static let modelLoadingFailed = "app.voxboard.modelLoadingFailed"
+  static let requestLLMProcessing = "app.voxboard.requestLLMProcessing"
+  static let llmProcessingStarted = "app.voxboard.llmProcessingStarted"
+  static let llmProcessingComplete = "app.voxboard.llmProcessingComplete"
+  static let llmProcessingFailed = "app.voxboard.llmProcessingFailed"
+  static let dictationLockChanged = "app.voxboard.dictationLockChanged"
+  static let keyboardShownInPractice = "app.voxboard.keyboardShownInPractice"
 }
 
 enum SessionAutoStopPolicy: String, CaseIterable, Sendable {
@@ -207,10 +212,10 @@ enum SessionAutoStopPolicy: String, CaseIterable, Sendable {
 }
 
 extension Notification.Name {
-  static let appLanguageChangeRequested = Notification.Name("app.sayboard.appLanguageChangeRequested")
-  static let dictationFailedNoModel = Notification.Name("app.sayboard.dictationFailedNoModel")
-  static let dictationFailedNoMic = Notification.Name("app.sayboard.dictationFailedNoMic")
-  static let purchaseScreenRequested = Notification.Name("app.sayboard.purchaseScreenRequested")
+  static let appLanguageChangeRequested = Notification.Name("app.voxboard.appLanguageChangeRequested")
+  static let dictationFailedNoModel = Notification.Name("app.voxboard.dictationFailedNoModel")
+  static let dictationFailedNoMic = Notification.Name("app.voxboard.dictationFailedNoMic")
+  static let purchaseScreenRequested = Notification.Name("app.voxboard.purchaseScreenRequested")
 }
 
 enum AppLanguageConfig {

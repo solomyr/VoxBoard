@@ -198,7 +198,7 @@ struct KeyboardSwitchTutorialView: View {
       self.menuRow(Text(verbatim: self.systemKeyboardName), isHighlighted: false)
       Divider()
         .padding(.leading, Self.menuRowInset)
-      self.menuRow(Text("Altboard"), isHighlighted: self.isSayboardRowHighlighted)
+      self.menuRow(Text("VoxBoard"), isHighlighted: self.isSayboardRowHighlighted)
     }
     .padding(.vertical, Self.menuVerticalPadding)
     .frame(width: Self.menuWidth)

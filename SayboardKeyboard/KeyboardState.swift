@@ -6,6 +6,10 @@ import SwiftUI
 @MainActor
 final class KeyboardState: ObservableObject {
 
+  let typing = TypingKeyboardModel()
+  @Published var returnKeyLabel = "return"
+
+  @Published var sessionSetupRequired = false
   @Published var isRecording = false
   @Published var isProcessing = false
   @Published var isSessionActive = false
@@ -69,6 +73,19 @@ final class KeyboardState: ObservableObject {
     self.settings.synchronize()
     self.keyboardKind = self.settings.keyboardKind
     self.keyboardHapticsEnabled = self.settings.keyboardHapticsEnabled
+    self.refreshTypingLanguage()
+  }
+
+  func refreshTypingLanguage() {
+    let defaults = self.hasFullAccess ? self.settings.defaults : UserDefaults.standard
+    self.typing.language = SharedSettings(defaults: defaults).keyboardLanguage
+  }
+
+  func selectTypingLanguage(_ language: KeyboardLanguage) {
+    // Regular typing remains available without Full Access or a microphone session.
+    SharedSettings(defaults: .standard).keyboardLanguage = language
+    if self.hasFullAccess { self.settings.keyboardLanguage = language }
+    self.typing.language = language
   }
 
   func refresh() {
@@ -107,6 +124,7 @@ final class KeyboardState: ObservableObject {
     self.showGlobeKey = self.settings.showGlobeKey
     self.needsInputModeSwitchKey = self.settings.needsInputModeSwitchKey
     self.keyboardHapticsEnabled = self.settings.keyboardHapticsEnabled
+    self.refreshTypingLanguage()
     self.syncDictationLock()
     self.checkDiskSpace()
     let _ = self.displayLink != nil

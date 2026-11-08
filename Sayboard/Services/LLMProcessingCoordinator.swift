@@ -13,6 +13,37 @@ final class LLMProcessingCoordinator: ObservableObject {
 
   @Published private(set) var isProcessing = false
 
+  /// Foreground composition shares the same local runtime as keyboard cleanup.
+  /// A failed cleanup leaves the caller's original transcript intact.
+  func polish(_ text: String, action: LLMAction = .readyToSend) async -> String? {
+    guard !self.isProcessing, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      let downloadService = self.downloadService, downloadService.hasUsableModel,
+      self.speechService?.isRecording != true, self.speechService?.isStopping != true
+    else { return nil }
+    let variant = SharedSettings().selectedLLMVariant
+    guard let modelPath = downloadService.modelFileURL(for: variant)?.path else { return nil }
+
+    self.isProcessing = true
+    let settings = SharedSettings()
+    settings.isLLMProcessing = true
+    defer {
+      self.inferenceService.unloadModel()
+      self.isProcessing = false
+      settings.isLLMProcessing = false
+    }
+    await self.prepareForInference(variant: variant, modelPath: modelPath)
+    guard self.inferenceService.loadState == .loaded, !Task.isCancelled else { return nil }
+    let result = await self.runInferenceWithTimeout(
+      systemPrompt: LLMPromptTemplates.systemPrompt(for: action, language: nil),
+      userText: text,
+      assistantPrefill: "",
+    )
+    guard !Task.isCancelled, let result else { return nil }
+    let trimmed = result.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard action != .readyToSend || ReadyToSendValidation.preservesNumbers(original: text, edited: trimmed) else { return nil }
+    return trimmed.isEmpty ? nil : trimmed
+  }
+
   func setupObservers() {
     self.requestObserver = TranscriptionBridge.observeDarwinNotification(
       DarwinNotificationName.requestLLMProcessing
@@ -39,7 +70,7 @@ final class LLMProcessingCoordinator: ObservableObject {
 
   private var requestObserver: DarwinNotificationObserver?
 
-  private func handleProcessingRequest() async {
+  func handleProcessingRequest() async {
     guard !self.isProcessing else {
       DiagnosticLog.write("llm: request ignored, already processing")
       return
@@ -57,10 +88,12 @@ final class LLMProcessingCoordinator: ObservableObject {
     settings.isLLMProcessing = true
     TranscriptionBridge.postDarwinNotification(DarwinNotificationName.llmProcessingStarted)
     let stylingHost = OnboardingTextEntry.stylingHost(settings.hostBundleId)
+    let sessionToken = settings.dictationSessionToken
 
     defer {
       self.isProcessing = false
       settings.isLLMProcessing = false
+      if settings.dictationSessionToken == sessionToken { settings.dictationSessionToken = nil }
       LLMBridge.clearRequest()
     }
 
@@ -87,9 +120,12 @@ final class LLMProcessingCoordinator: ObservableObject {
       assistantPrefill: prefill,
     )
 
-    if let result, !result.isEmpty {
+    if let result, !result.isEmpty,
+      validated.request.action != .readyToSend
+        || ReadyToSendValidation.preservesNumbers(original: validated.request.text, edited: result) {
       let finalResult = self.styled(result, action: validated.request.action, host: stylingHost, settings: settings)
-      LLMBridge.writeResult(finalResult)
+      LLMBridge.writeResult(finalResult, replacing: validated.request.replacementContext,
+                            hostBundleId: validated.request.hostBundleId)
       TranscriptionBridge.postDarwinNotification(DarwinNotificationName.llmProcessingComplete)
       DiagnosticLog.write("llm: complete, result=\(finalResult.count) chars")
     } else {
@@ -156,7 +192,7 @@ final class LLMProcessingCoordinator: ObservableObject {
   }
 
   private func styled(_ text: String, action: LLMAction, host: String?, settings: SharedSettings) -> String {
-    guard action != .addPunctuation, action != .fixGrammar else { return text }
+    guard action != .readyToSend, action != .addPunctuation, action != .fixGrammar else { return text }
     let resolvedStyle = AppStyleStore().resolvedStyle(
       hostBundleId: host,
       defaultStyle: settings.defaultWritingStyle,

@@ -31,7 +31,7 @@ struct LLMSettingsView: View {
 
   @EnvironmentObject private var llmDownloadService: LLMDownloadService
   @AppStorage(SharedKey.llmEnabled, store: UserDefaults(suiteName: AppGroup.identifier))
-  private var llmEnabled = false
+  private var llmEnabled = true
   @State private var defaultActionSelection = LLMActionSelection.none
   @State private var customPrompts = [LLMCustomPrompt]()
   @State private var longPressAction = LLMActionSelection.none

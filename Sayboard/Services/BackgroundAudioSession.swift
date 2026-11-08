@@ -53,10 +53,16 @@ final class BackgroundAudioSession: ObservableObject {
     try audioSession.setAllowHapticsAndSystemSoundsDuringRecording(true)
     try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-    try self.installPersistentTap()
-
-    self.audioEngine.prepare()
-    try self.audioEngine.start()
+    do {
+      try self.installPersistentTap()
+      self.audioEngine.prepare()
+      try self.audioEngine.start()
+    } catch {
+      self.audioEngine.stop()
+      self.audioEngine.inputNode.removeTap(onBus: 0)
+      try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+      throw error
+    }
 
     self.isSessionActive = true
     self.settings.isSessionActive = true
@@ -73,6 +79,7 @@ final class BackgroundAudioSession: ObservableObject {
     }
 
     self.resetLevelState()
+    self.tapState.withLock { $0 = nil }
     self.onSessionEnded?()
 
     self.inactivityTimer?.invalidate()
@@ -136,11 +143,18 @@ final class BackgroundAudioSession: ObservableObject {
     self.cancelInactivityTimer()
   }
 
-  func deactivateTap() {
+  /// Stops capturing. With `keepSessionReady`, the engine keeps running (capturing
+  /// nothing) until the auto-stop timer fires, so the keyboard can start the next
+  /// recording without opening the app. Otherwise the microphone is released now.
+  func deactivateTap(keepSessionReady: Bool = false) {
     self.tapState.withLock { $0 = nil }
     self.resetLevelState()
     self.logTapDiagnostics()
-    self.resetInactivityTimer()
+    if keepSessionReady {
+      self.resetInactivityTimer()
+    } else {
+      self.endSession()
+    }
   }
 
   func updateTimeout() {
@@ -290,7 +304,7 @@ final class BackgroundAudioSession: ObservableObject {
     }
   }
 
-  private func handleInterruption(typeValue: UInt?, optionsValue: UInt?) {
+  private func handleInterruption(typeValue: UInt?, optionsValue _: UInt?) {
     guard
       let typeValue,
       let type = AVAudioSession.InterruptionType(rawValue: typeValue)
@@ -300,23 +314,12 @@ final class BackgroundAudioSession: ObservableObject {
 
     switch type {
     case .began:
-      self.deactivateTap()
+      self.endSession()
       self.onInterruptionBegan?()
 
     case .ended:
-      let shouldResume = optionsValue.map {
-        AVAudioSession.InterruptionOptions(rawValue: $0).contains(.shouldResume)
-      } ?? false
-      guard shouldResume else {
-        self.endSession()
-        return
-      }
-      do {
-        try self.audioEngine.start()
-        self.resetInactivityTimer()
-      } catch {
-        self.endSession()
-      }
+      // A call or other interruption must not silently reopen the microphone.
+      break
 
     @unknown default:
       break

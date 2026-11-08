@@ -39,7 +39,7 @@ struct StoreKitConfigurationTests {
     #expect(product.price == configuredPrice)
   }
 
-  private static let productID = "app.sayboard.fullversion"
+  private static let productID = "app.voxboard.fullversion"
   private static let nonConsumableType = "NonConsumable"
 
   private static var isStoreKitTestingBroken: Bool {

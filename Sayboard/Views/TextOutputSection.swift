@@ -39,7 +39,7 @@ struct TextOutputSection: View {
   private static let clipboardFooterMessage: LocalizedStringKey = "After each dictation, the inserted text is also copied to the system clipboard. Replaces the previous clipboard contents."
 
   @AppStorage(SharedKey.llmEnabled, store: UserDefaults(suiteName: AppGroup.identifier))
-  private var llmEnabled = false
+  private var llmEnabled = true
   @AppStorage(SharedKey.alsoCopyToClipboard, store: UserDefaults(suiteName: AppGroup.identifier))
   private var alsoCopyToClipboard = false
   @EnvironmentObject private var llmDownloadService: LLMDownloadService

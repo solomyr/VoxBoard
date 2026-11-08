@@ -1,124 +1,197 @@
 import SwiftUI
 
 struct StandardKeyboardLayout: View {
-
   let proxy: KeyboardProxy
-
   @ObservedObject var keyboardState: KeyboardState
+  @State private var notice: LocalizedStringKey?
+  @State private var tapCount = 0
+  /// What the current finger-down on the mic did, from touch-down to lift.
+  private enum MicPress { case none, started(Date), stopped, deferredToTap, ignored }
+  @State private var micPress = MicPress.none
+
+  /// Holding the mic at least this long records push-to-talk: letting go stops it.
+  private static let holdToTalkThreshold: TimeInterval = 0.4
+
+  private var isHoldingMic: Bool {
+    if case .started = self.micPress { return true }
+    return false
+  }
+
+  private var micDisabled: Bool {
+    self.busy && !self.keyboardState.isRecording
+  }
+
+  private var busy: Bool {
+    self.keyboardState.isProcessing || self.keyboardState.isLLMProcessing
+  }
 
   var body: some View {
     VStack(spacing: 0) {
-      KeyboardStatusStrip(
-        keyboardState: self.keyboardState,
-        onContentHeightChange: self.proxy.setStatusStripHeight,
+      self.statusBanner
+      TypingKeyboardView(
+        model: self.keyboardState.typing,
+        scale: KeyboardMetrics.scale,
+        inputDisabled: self.busy || self.keyboardState.isRecording,
+        returnLabel: self.keyboardState.returnKeyLabel,
+        onInsert: { self.tapCount &+= 1; self.proxy.insertText($0) },
+        onSpace: { self.tapCount &+= 1; self.proxy.insertSpace() },
+        onDelete: { self.proxy.deleteBackward() },
+        onMoveCursor: self.proxy.adjustTextPosition,
+        onLanguageChange: self.keyboardState.selectTypingLanguage,
+        toolbar: { self.toolbar },
+        globe: { GlobeKey(fixedWidth: 36.kbScaled) },
       )
-      VStack(spacing: 8.5.kbScaled) {
-        self.micRow
-        KeyboardBottomRow(proxy: self.proxy, metrics: self.chrome, keyboardState: self.keyboardState)
-      }
+    }
+    .gatedSensoryFeedback(.selection, trigger: self.tapCount)
+    .onAppear { self.proxy.setActionBarVisible(false) }
+    .onChange(of: self.keyboardState.isRecording) { _, recording in
+      if recording { self.notice = nil }
+    }
+    .onChange(of: self.keyboardState.sessionSetupRequired) { _, required in
+      if required { self.notice = SetupBlocker.sessionInactive.message }
     }
   }
 
-  private var chrome: KeyboardChromeMetrics {
-    KeyboardChromeMetrics(keyboardState: self.keyboardState)
-  }
-
-  private var micRow: some View {
-    ZStack(alignment: .bottom) {
-      self.sideButtons
-      MicButtonWithPulse(sizing: .standard, proxy: self.proxy, keyboardState: self.keyboardState)
-        .padding(.bottom, 6.kbScaled)
-    }
-    .padding(.horizontal, 4.kbScaled)
-  }
-
-}
-
-extension StandardKeyboardLayout {
-  private var sideButtons: some View {
-    HStack(alignment: .bottom, spacing: KeyboardChromeMetrics.buttonSpacing) {
-      KeyButton(
-        content: .systemImage("gearshape"),
-        fixedWidth: self.chrome.sideButtonWidth,
-        fillOnPress: true,
-        firesHaptic: false,
-      ) {
-        if let url = DeepLink.settingsURL { self.proxy.openURL(url) }
-      }
-      if self.keyboardState.selectedVariantSupportsTranslation {
-        TranslateToggleButton(fixedWidth: self.chrome.sideButtonWidth, keyboardState: self.keyboardState)
-          .transition(.opacity.combined(with: .scale))
-      }
-      Spacer()
-      VStack(alignment: .trailing, spacing: 8.5.kbScaled) {
-        if self.keyboardState.hasLLMHistory {
-          self.undoRedoRow
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
+  private var statusBanner: some View {
+    VStack(spacing: 0) {
+      if let message = self.keyboardState.llmError?.message ?? self.notice {
+        HStack(spacing: 8) {
+          Text(message).font(.footnote).fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("typing.notice")
+          Spacer(minLength: 0)
+          Button {
+            self.notice = nil
+            self.keyboardState.llmError = nil
+          } label: { Image(systemName: "xmark.circle.fill").frame(width: 32, height: 36) }
+            .accessibilityLabel("Dismiss")
         }
-        HStack(spacing: KeyboardChromeMetrics.buttonSpacing) {
-          if self.keyboardState.showsAIButton {
-            self.aiButton.transition(.opacity.combined(with: .scale))
-          }
-          KeyButton(
-            content: .systemImage("delete.left"),
-            fixedWidth: self.chrome.sideButtonWidth,
-            fillOnPress: true,
-          ) {
-            self.proxy.deleteBackward()
-          }
-        }
+        .padding(.horizontal, 10).padding(.vertical, 6)
+      } else if let outcome = self.keyboardState.dictationOutcome {
+        DictationOutcomeLabel(outcome: outcome) { self.keyboardState.dictationOutcome = nil }
       }
     }
-    .animation(.easeInOut(duration: 0.35), value: self.keyboardState.selectedVariantSupportsTranslation)
-    .animation(.easeInOut(duration: 0.35), value: self.keyboardState.showsAIButton)
-    .animation(.easeInOut(duration: 0.25), value: self.keyboardState.hasLLMHistory)
-  }
-
-  private var undoRedoRow: some View {
-    HStack(spacing: KeyboardChromeMetrics.buttonSpacing) {
-      KeyButton(
-        content: .systemImage("arrow.uturn.backward"),
-        fixedWidth: self.chrome.sideButtonWidth,
-        firesHaptic: false,
-      ) {
-        self.proxy.undoLLM()
+    .background {
+      GeometryReader { geometry in
+        Color.clear
+          .onAppear { self.proxy.setStatusStripHeight(geometry.size.height) }
+          .onChange(of: geometry.size.height) { _, height in self.proxy.setStatusStripHeight(height) }
       }
-      .disabled(!self.keyboardState.canUndoLLM)
-      .opacity(self.keyboardState.canUndoLLM ? 1 : 0.35)
-
-      KeyButton(
-        content: .systemImage("arrow.uturn.forward"),
-        fixedWidth: self.chrome.sideButtonWidth,
-        firesHaptic: false,
-      ) {
-        self.proxy.redoLLM()
-      }
-      .disabled(!self.keyboardState.canRedoLLM)
-      .opacity(self.keyboardState.canRedoLLM ? 1 : 0.35)
     }
   }
 
-  @ViewBuilder
-  private var aiButton: some View {
-    if self.keyboardState.isLLMProcessing {
-      MetaballSpinner(color: .primary, size: 18.kbScaled)
-        .frame(width: self.chrome.sideButtonWidth, height: 45.kbScaled)
-        .background {
-          RoundedRectangle(cornerRadius: 8.5.kbScaled, style: .continuous)
-            .fill(Color(.keyBackground))
+  private var toolbar: some View {
+    HStack(spacing: 8) {
+      Spacer(minLength: 0)
+      if self.busy { ProgressView().controlSize(.small) }
+      Text(self.statusTitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        .accessibilityIdentifier("typing.status")
+      Spacer(minLength: 0)
+      if self.keyboardState.hasLLMHistory {
+        Button { self.proxy.undoLLM() } label: { Image(systemName: "arrow.uturn.backward") }
+          .disabled(!self.keyboardState.canUndoLLM || self.busy || self.keyboardState.isRecording)
+          .accessibilityLabel("Undo cleanup")
+      }
+      #if VOXBOARD_INTENT_PROBE
+      if #available(iOS 27.0, *) { KeyboardBackgroundProbeButton() }
+      KeyboardMicProbeButton()
+      #endif
+      if self.keyboardState.showsAIButton {
+        Button {
+          self.proxy.requestLLMProcessing(.readyToSend, nil)
+        } label: {
+          Image(systemName: "sparkles").frame(minWidth: 32, minHeight: 44.kbScaled)
         }
+        .disabled(self.busy || self.keyboardState.isRecording)
+        .accessibilityLabel("Polish text")
+        .accessibilityIdentifier("typing.polish")
+      }
+      if self.keyboardState.isSessionActive, !self.keyboardState.isRecording, !self.busy {
+        Button {
+          TranscriptionBridge.postDarwinNotification(DarwinNotificationName.requestEndSession)
+        } label: {
+          Image(systemName: "mic.slash").frame(minWidth: 32, minHeight: 44.kbScaled)
+        }
+        .accessibilityLabel("Turn microphone off")
+        .accessibilityIdentifier("typing.microphoneOff")
+      }
+      Image(systemName: self.keyboardState.isRecording ? "stop.fill" : "mic.fill")
+        .font(.system(size: 18.kbScaled, weight: .semibold))
+        .foregroundStyle(.white)
+        .frame(width: 42.kbScaled, height: 42.kbScaled)
+        .background(self.keyboardState.isRecording ? Color.red : Color.accentColor, in: Circle())
+        .scaleEffect(self.isHoldingMic ? 0.92 : 1)
+        .opacity(self.micDisabled ? 0.4 : 1)
+        .contentShape(Circle())
+        .gesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in self.micPressBegan() }
+            .onEnded { _ in self.micPressEnded() }
+        )
+        .accessibilityElement()
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(self.keyboardState.isRecording ? "Stop dictation" : "Start dictation")
+        .accessibilityHint("Tap to start and tap again to finish, or hold while speaking.")
+        .accessibilityAction { self.tapMicrophone() }
+        .accessibilityIdentifier("typing.microphone")
+    }
+  }
+
+  private var statusTitle: LocalizedStringKey {
+    if self.keyboardState.isRecording { return "Listening…" }
+    if self.keyboardState.isLLMProcessing { return "Polishing…" }
+    if self.keyboardState.isProcessing { return "Transcribing…" }
+    return self.keyboardState.isSessionActive ? "Mic active" : "Mic off"
+  }
+
+  private func micPressBegan() {
+    guard case .none = self.micPress else { return }
+    if self.micDisabled {
+      self.micPress = .ignored
+    } else if self.keyboardState.isRecording {
+      self.tapMicrophone()
+      self.micPress = .stopped
+    } else if self.keyboardState.isSessionActive {
+      // A running mic session records in place, so start on touch-down.
+      self.micPress = self.tapMicrophone() ? .started(Date()) : .ignored
     } else {
-      let isRecording = self.keyboardState.isRecording
-      AIButton(
-        fixedWidth: self.chrome.sideButtonWidth,
-        onTap: { KeyboardActions.tapLLM(state: self.keyboardState, proxy: self.proxy) },
-        onLongPress: { KeyboardActions.longPressLLM(state: self.keyboardState, proxy: self.proxy) },
-        longPressEnabled: self.keyboardState.longPressLLMAction.isSet,
-        isActive: self.keyboardState.showLLMActions,
-      )
-      .opacity(isRecording ? 0.5 : 1)
-      .allowsHitTesting(!isRecording)
-      .animation(.easeOut(duration: 0.2), value: isRecording)
+      // Without a session the keyboard has to open VoxBoard; do that on lift.
+      self.micPress = .deferredToTap
     }
+  }
+
+  private func micPressEnded() {
+    let press = self.micPress
+    self.micPress = .none
+    switch press {
+    case .started(let start):
+      // Held long enough: push-to-talk, so letting go finishes the recording.
+      if Date().timeIntervalSince(start) >= Self.holdToTalkThreshold {
+        self.proxy.stopDictation()
+      }
+    case .deferredToTap:
+      self.tapMicrophone()
+    case .none, .stopped, .ignored:
+      break
+    }
+  }
+
+  /// Starts or stops dictation. Returns true when a start was requested.
+  @discardableResult
+  private func tapMicrophone() -> Bool {
+    self.keyboardState.dismissMicHint()
+    if self.keyboardState.isRecording {
+      self.proxy.stopDictation()
+    } else if !self.keyboardState.hasFullAccess {
+      self.notice = SetupBlocker.fullAccessMissing.message
+    } else if !self.keyboardState.isMicrophoneAuthorized {
+      self.notice = SetupBlocker.micDenied.message
+    } else if !self.keyboardState.hasUsableModel {
+      self.notice = SetupBlocker.noModel.message
+    } else {
+      self.notice = nil
+      self.proxy.startDictation()
+      return true
+    }
+    return false
   }
 }

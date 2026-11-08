@@ -53,9 +53,11 @@ extension KeyboardViewController {
   }
 
   func openURL(_ url: URL) {
+    DiagnosticLog.write("keyboard: opening \(url.host ?? "app")")
     if self.openURLViaResponderChain(url) { return }
 
     if self.openURLViaKVC(url) { return }
+    self.keyboardState.sessionSetupRequired = true
   }
 
   private static let auditTokenPidOffset = 5 * MemoryLayout<UInt32>.size
@@ -167,7 +169,7 @@ extension KeyboardViewController {
 
       if responds {
         if let app = current as? UIApplication {
-          app.open(url, options: [:], completionHandler: nil)
+          self.openInApplication(app, url: url)
           return true
         }
       }
@@ -187,7 +189,14 @@ extension KeyboardViewController {
     else {
       return false
     }
-    app.open(url, options: [:], completionHandler: nil)
+    self.openInApplication(app, url: url)
     return true
+  }
+
+  private func openInApplication(_ app: UIApplication, url: URL) {
+    app.open(url, options: [:]) { [weak self] accepted in
+      DiagnosticLog.write("keyboard: app handoff accepted=\(accepted)")
+      if !accepted { self?.keyboardState.sessionSetupRequired = true }
+    }
   }
 }

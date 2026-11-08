@@ -1,6 +1,9 @@
-name: Sayboard
+name: VoxBoard
+include:
+  - path: signing.local.yml
+    optional: true
 options:
-  bundleIdPrefix: app.sayboard
+  bundleIdPrefix: app.voxboard
   developmentLanguage: en
   deploymentTarget:
     iOS: "17.0"
@@ -27,7 +30,6 @@ settings:
     SWIFT_TREAT_WARNINGS_AS_ERRORS: true
     GCC_TREAT_WARNINGS_AS_ERRORS: true
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-    DEVELOPMENT_TEAM: "62XTT6F73G"
     CODE_SIGN_STYLE: Automatic
     DEAD_CODE_STRIPPING: true
     ENABLE_USER_SCRIPT_SANDBOXING: false
@@ -60,10 +62,15 @@ targets:
     platform: iOS
     sources:
       - path: Sayboard
+        excludes:
+          - Resources/Tokenizers
+      - path: Sayboard/Resources/Tokenizers
+        type: folder
+        buildPhase: resources
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.sayboard
+        PRODUCT_BUNDLE_IDENTIFIER: app.voxboard
         INFOPLIST_FILE: Sayboard/Info.plist
         CODE_SIGN_ENTITLEMENTS: Sayboard/Sayboard.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -105,7 +112,7 @@ targets:
       - target: Sayboard
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.sayboard.tests
+        PRODUCT_BUNDLE_IDENTIFIER: app.voxboard.tests
         GENERATE_INFOPLIST_FILE: "YES"
         # StoreKitTest's own SKTestTransaction.h uses SKPaymentTransactionState, deprecated in iOS 18, and the
         # explicit module build compiles it with -Werror (iOS 26.2 SDK, verified 2026-09-16).
@@ -119,7 +126,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.sayboard.keyboard
+        PRODUCT_BUNDLE_IDENTIFIER: app.voxboard.keyboard
         INFOPLIST_FILE: SayboardKeyboard/Info.plist
         CODE_SIGN_ENTITLEMENTS: SayboardKeyboard/SayboardKeyboard.entitlements
         SWIFT_OBJC_BRIDGING_HEADER: SayboardKeyboard/SayboardKeyboard-Bridging-Header.h
@@ -138,9 +145,35 @@ targets:
     scheme:
       testTargets: []
 
+  VoxBoardUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: VoxBoardUITests
+    dependencies:
+      - target: Sayboard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.voxboard.uitests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_TARGET_NAME: Sayboard
+
+  VoxBoardKeyboardFixture:
+    type: application
+    platform: iOS
+    sources:
+      - path: VoxBoardKeyboardFixture
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.voxboard.keyboardfixture
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: "VoxBoard Test Field"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+    scheme: {}
+
 schemes:
-  # Run and Test stay in Debug and never show the paywall; Archive always has it.
-  Sayboard:
+  # VoxBoard builds are unrestricted, including archives.
+  VoxBoard:
     build:
       targets:
         Sayboard: all
@@ -155,10 +188,10 @@ schemes:
     analyze:
       config: Debug
     archive:
-      config: AppStore
+      config: Release
 
   # For trying the purchase locally against StoreKit/Sayboard.storekit; not used for releases.
-  Sayboard StoreKit:
+  VoxBoard StoreKit:
     build:
       targets:
         Sayboard: all
@@ -171,3 +204,14 @@ schemes:
       config: AppStore
     archive:
       config: AppStore
+
+  VoxBoard Device Tests:
+    build:
+      targets:
+        Sayboard: all
+        VoxBoardUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - SayboardTests
+        - VoxBoardUITests

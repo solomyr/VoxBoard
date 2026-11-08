@@ -12,7 +12,7 @@ struct SetupView: View {
           video: .microphone,
         )
         self.tutorialRow(
-          "Add Altboard Keyboard",
+          "Add VoxBoard Keyboard",
           systemImage: "keyboard",
           isDone: self.checklist.keyboardAdded,
           video: .addKeyboard,
@@ -26,7 +26,7 @@ struct SetupView: View {
         self.modelRow
       } footer: {
         if !self.checklist.isComplete {
-          Text("Altboard won’t work until these settings are configured")
+          Text("VoxBoard won’t work until these settings are configured")
         }
       }
     }

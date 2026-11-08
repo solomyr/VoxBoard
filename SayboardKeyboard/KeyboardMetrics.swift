@@ -17,7 +17,7 @@ enum KeyboardMetrics {
   static let actionBarExtraHeight: CGFloat = baseActionBarExtra * scale
 
   static func totalHeight(actionBarVisible: Bool, kind: KeyboardKind) -> CGFloat {
-    let base = kind == .extended ? self.extendedHeight : self.height
+    let base = kind == .extended ? self.extendedHeight : 256 * self.scale
     return base + (actionBarVisible ? self.actionBarExtraHeight : 0)
   }
 }

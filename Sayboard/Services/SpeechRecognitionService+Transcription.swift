@@ -55,12 +55,15 @@ extension SpeechRecognitionService {
 
     if case .text(let output) = result {
       let sanitizedText = TextSanitizer.sanitize(output.text)
+      self.rawTranscription = sanitizedText
       let bridgeText = self.styled(sanitizedText, host: stylingHost)
       self.currentTranscription = bridgeText
 
       self.settings.chargeFreeWords(WordCounter.count(bridgeText))
 
-      TranscriptionBridge.writeTranscription(bridgeText)
+      if self.deliversToKeyboard {
+        TranscriptionBridge.writeTranscription(bridgeText)
+      }
 
       if let start = output.firstWordStart, let end = output.lastWordEnd {
         self.currentWordBoundaries = (start: start, end: end)

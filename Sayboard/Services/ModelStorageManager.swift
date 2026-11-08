@@ -139,7 +139,7 @@ enum ModelStorageManager {
   private static let discardedCachePrefix = "CoreMLCache-"
 
   private static var effectiveBundleId: String {
-    Bundle.main.bundleIdentifier ?? "app.sayboard"
+    Bundle.main.bundleIdentifier ?? "app.voxboard"
   }
 
   private static func resolveExistingCachePath(

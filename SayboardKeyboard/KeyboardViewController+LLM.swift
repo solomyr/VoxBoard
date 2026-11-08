@@ -33,6 +33,7 @@ extension KeyboardViewController {
       DispatchQueue.main.async {
         guard let vc = Self.activeInstance else { return }
         vc.insertPendingAutoActionFallback()
+        vc.keyboardState.llmError = .polishFailed
         vc.keyboardState.isLLMProcessing = false
         vc.keyboardState.isProcessing = false
       }
@@ -106,15 +107,27 @@ extension KeyboardViewController {
       settings.synchronize()
     }
 
+    self.saveHostBundleId()
     let request = LLMRequest(
       text: inputText,
       action: action,
       customPromptId: customPromptId,
       language: language,
+      replacementContext: directText == nil ? inputText : nil,
+      hostBundleId: settings.hostBundleId,
     )
+    LLMBridge.clearResult()
     LLMBridge.writeRequest(request)
 
-    TranscriptionBridge.postDarwinNotification(DarwinNotificationName.requestLLMProcessing)
+    if directText == nil, !self.keyboardState.isSessionActive, let url = DeepLink.polishURL {
+      self.saveHostBundleId()
+      settings.keyboardRequestedDictationAt = CFAbsoluteTimeGetCurrent()
+      settings.keyboardRequestedDictation = true
+      settings.synchronize()
+      self.openURL(url)
+    } else {
+      TranscriptionBridge.postDarwinNotification(DarwinNotificationName.requestLLMProcessing)
+    }
     DiagnosticLog.write("llm/kb: requested \(action.rawValue), text=\(inputText.count) chars")
   }
 
@@ -138,9 +151,15 @@ extension KeyboardViewController {
   }
 
   private func insertLLMResult() {
-    guard let result = LLMBridge.readResult(), !result.isEmpty else {
+    guard let delivery = LLMBridge.readDelivery(), !delivery.text.isEmpty else {
       DiagnosticLog.write("llm/kb: notified complete but bridge held no result")
       self.insertPendingAutoActionFallback()
+      self.keyboardState.isLLMProcessing = false
+      self.keyboardState.isProcessing = false
+      return
+    }
+    let result = delivery.text
+    if let target = delivery.hostBundleId, target != SharedSettings().hostBundleId {
       self.keyboardState.isLLMProcessing = false
       self.keyboardState.isProcessing = false
       return
@@ -148,7 +167,7 @@ extension KeyboardViewController {
     DiagnosticLog.write("llm/kb: inserting \(result.count) chars")
 
     let currentBeforeText = textDocumentProxy.documentContextBeforeInput ?? ""
-    let expected = self.llmOriginalText
+    let expected = delivery.replacementContext ?? ""
     guard expected.isEmpty || currentBeforeText == expected else {
       DiagnosticLog.write("llm/kb: document changed under the request, refusing to replace")
       self.keyboardState.llmError = .noTextBeforeCursor
@@ -170,6 +189,9 @@ extension KeyboardViewController {
     }
     self.copyFinalTextToClipboardIfEnabled(result)
 
+    if self.keyboardState.llmTextHistory.isEmpty, !expected.isEmpty {
+      self.keyboardState.llmTextHistory = [expected]
+    }
     self.keyboardState.llmTextHistory.append(result)
     self.keyboardState.llmHistoryIndex = self.keyboardState.llmTextHistory.count - 1
 

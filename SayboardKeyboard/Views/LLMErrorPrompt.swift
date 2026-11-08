@@ -2,16 +2,24 @@
 import SwiftUI
 
 enum LLMError {
+  case openAppSettings
+  case polishFailed
   case noTextBeforeCursor
 
   var icon: String {
     switch self {
+    case .openAppSettings: "gearshape"
+    case .polishFailed: "exclamationmark.bubble"
     case .noTextBeforeCursor: "character.cursor.ibeam"
     }
   }
 
   var message: LocalizedStringKey {
     switch self {
+    case .openAppSettings:
+      "Open the VoxBoard app to change settings, then return here to continue dictating."
+    case .polishFailed:
+      "Polishing did not finish. Your original text has been kept. Review it before sending."
     case .noTextBeforeCursor:
       "To use AI actions, make sure the text field has text and the cursor is after it"
     }
@@ -19,6 +27,8 @@ enum LLMError {
 
   var buttonTitle: LocalizedStringKey {
     switch self {
+    case .openAppSettings: "OK"
+    case .polishFailed: "OK"
     case .noTextBeforeCursor: "OK"
     }
   }

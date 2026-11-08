@@ -896,180 +896,180 @@
         }
       }
     },
-    "Dictation failed. Try a different speech model in Altboard": {
+    "Dictation failed. Try a different speech model in VoxBoard": {
       "localizations": {
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Диктовката не бе успешна. Опитайте друг модел за реч в Altboard"
+            "value": "Диктовката не бе успешна. Опитайте друг модел за реч в VoxBoard"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktování selhalo. Zkuste jiný model řeči v Altboardu"
+            "value": "Diktování selhalo. Zkuste jiný model řeči v VoxBoardu"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktering mislykkedes. Prøv en anden talemodel i Altboard"
+            "value": "Diktering mislykkedes. Prøv en anden talemodel i VoxBoard"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktieren fehlgeschlagen. Wählen Sie in Altboard ein anderes Sprachmodell"
+            "value": "Diktieren fehlgeschlagen. Wählen Sie in VoxBoard ein anderes Sprachmodell"
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Η υπαγόρευση απέτυχε. Δοκιμάστε άλλο μοντέλο ομιλίας στο Altboard"
+            "value": "Η υπαγόρευση απέτυχε. Δοκιμάστε άλλο μοντέλο ομιλίας στο VoxBoard"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El dictado falló. Pruebe otro modelo de voz en Altboard"
+            "value": "El dictado falló. Pruebe otro modelo de voz en VoxBoard"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dikteerimine ebaõnnestus. Proovige Altboardis teist kõnemudelit"
+            "value": "Dikteerimine ebaõnnestus. Proovige VoxBoardis teist kõnemudelit"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sanelu epäonnistui. Kokeile toista puhemallia Altboardissa"
+            "value": "Sanelu epäonnistui. Kokeile toista puhemallia VoxBoardissa"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Échec de la dictée. Essayez un autre modèle vocal dans Altboard"
+            "value": "Échec de la dictée. Essayez un autre modèle vocal dans VoxBoard"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "डिक्टेशन विफल रहा। Altboard में कोई दूसरा स्पीच मॉडल आज़माएँ"
+            "value": "डिक्टेशन विफल रहा। VoxBoard में कोई दूसरा स्पीच मॉडल आज़माएँ"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktiranje nije uspjelo. Pokušajte s drugim modelom govora u Altboardu"
+            "value": "Diktiranje nije uspjelo. Pokušajte s drugim modelom govora u VoxBoardu"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A diktálás nem sikerült. Próbáljon ki másik beszédmodellt az Altboardban"
+            "value": "A diktálás nem sikerült. Próbáljon ki másik beszédmodellt az VoxBoardban"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dettatura non riuscita. Provi un altro modello vocale in Altboard"
+            "value": "Dettatura non riuscita. Provi un altro modello vocale in VoxBoard"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "音声入力に失敗しました。Altboardで別の音声モデルをお試しください"
+            "value": "音声入力に失敗しました。VoxBoardで別の音声モデルをお試しください"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "받아쓰기에 실패했습니다. Altboard에서 다른 음성 모델을 사용해 보세요"
+            "value": "받아쓰기에 실패했습니다. VoxBoard에서 다른 음성 모델을 사용해 보세요"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktavimas nepavyko. Pabandykite kitą kalbos modelį Altboard programėlėje"
+            "value": "Diktavimas nepavyko. Pabandykite kitą kalbos modelį VoxBoard programėlėje"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktēšana neizdevās. Izmēģiniet citu runas modeli lietotnē Altboard"
+            "value": "Diktēšana neizdevās. Izmēģiniet citu runas modeli lietotnē VoxBoard"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dicteren mislukt. Probeer een ander spraakmodel in Altboard"
+            "value": "Dicteren mislukt. Probeer een ander spraakmodel in VoxBoard"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktering mislyktes. Prøv en annen talemodell i Altboard"
+            "value": "Diktering mislyktes. Prøv en annen talemodell i VoxBoard"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dyktowanie nie powiodło się. Wypróbuj inny model mowy w aplikacji Altboard"
+            "value": "Dyktowanie nie powiodło się. Wypróbuj inny model mowy w aplikacji VoxBoard"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Falha no ditado. Tente outro modelo de fala no Altboard"
+            "value": "Falha no ditado. Tente outro modelo de fala no VoxBoard"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dictarea a eșuat. Încercați alt model vocal în Altboard"
+            "value": "Dictarea a eșuat. Încercați alt model vocal în VoxBoard"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Диктовка не удалась. Попробуйте другую модель речи в Altboard"
+            "value": "Диктовка не удалась. Попробуйте другую модель речи в VoxBoard"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktovanie zlyhalo. Skúste iný model reči v Altboarde"
+            "value": "Diktovanie zlyhalo. Skúste iný model reči v VoxBoarde"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Narekovanje ni uspelo. Poskusite drug model govora v Altboardu"
+            "value": "Narekovanje ni uspelo. Poskusite drug model govora v VoxBoardu"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diktering misslyckades. Prova en annan talmodell i Altboard"
+            "value": "Diktering misslyckades. Prova en annan talmodell i VoxBoard"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dikte başarısız oldu. Altboard’da başka bir konuşma modeli deneyin"
+            "value": "Dikte başarısız oldu. VoxBoard’da başka bir konuşma modeli deneyin"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Диктування не вдалося. Спробуйте іншу модель мовлення в Altboard"
+            "value": "Диктування не вдалося. Спробуйте іншу модель мовлення в VoxBoard"
           }
         },
         "zh": {
           "stringUnit": {
             "state": "translated",
-            "value": "听写失败。请在 Altboard 中尝试其他语音模型"
+            "value": "听写失败。请在 VoxBoard 中尝试其他语音模型"
           }
         }
       }
@@ -1611,537 +1611,537 @@
         }
       }
     },
-    "Free dictation is used up. Open Altboard to continue": {
+    "Free dictation is used up. Open VoxBoard to continue": {
       "comment": "Standing note in the keyboard status strip once the free dictation allowance is spent. Like every multi-sentence status here, no final period.",
       "localizations": {
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Безплатната диктовка е изчерпана. Отворете Altboard, за да продължите"
+            "value": "Безплатната диктовка е изчерпана. Отворете VoxBoard, за да продължите"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bezplatné diktování je vyčerpáno. Otevřete Altboard a pokračujte"
+            "value": "Bezplatné diktování je vyčerpáno. Otevřete VoxBoard a pokračujte"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den gratis diktering er brugt op. Åbn Altboard for at fortsætte"
+            "value": "Den gratis diktering er brugt op. Åbn VoxBoard for at fortsætte"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das kostenlose Diktieren ist aufgebraucht. Öffnen Sie Altboard, um fortzufahren"
+            "value": "Das kostenlose Diktieren ist aufgebraucht. Öffnen Sie VoxBoard, um fortzufahren"
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Η δωρεάν υπαγόρευση εξαντλήθηκε. Ανοίξτε το Altboard για να συνεχίσετε"
+            "value": "Η δωρεάν υπαγόρευση εξαντλήθηκε. Ανοίξτε το VoxBoard για να συνεχίσετε"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El dictado gratuito se ha agotado. Abra Altboard para continuar"
+            "value": "El dictado gratuito se ha agotado. Abra VoxBoard para continuar"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tasuta dikteerimine on otsas. Jätkamiseks avage rakendus Altboard"
+            "value": "Tasuta dikteerimine on otsas. Jätkamiseks avage rakendus VoxBoard"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ilmainen sanelu on käytetty loppuun. Avaa Altboard-ohjelma jatkaaksesi"
+            "value": "Ilmainen sanelu on käytetty loppuun. Avaa VoxBoard-ohjelma jatkaaksesi"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La dictée gratuite est épuisée. Ouvrez Altboard pour continuer"
+            "value": "La dictée gratuite est épuisée. Ouvrez VoxBoard pour continuer"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "मुफ़्त डिक्टेशन ख़त्म हो गया है। जारी रखने के लिए Altboard खोलें"
+            "value": "मुफ़्त डिक्टेशन ख़त्म हो गया है। जारी रखने के लिए VoxBoard खोलें"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Besplatno diktiranje je potrošeno. Otvorite Altboard za nastavak"
+            "value": "Besplatno diktiranje je potrošeno. Otvorite VoxBoard za nastavak"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elfogyott az ingyenes diktálás. A folytatáshoz nyissa meg az Altboard alkalmazást"
+            "value": "Elfogyott az ingyenes diktálás. A folytatáshoz nyissa meg az VoxBoard alkalmazást"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La dettatura gratuita è esaurita. Apra Altboard per continuare"
+            "value": "La dettatura gratuita è esaurita. Apra VoxBoard per continuare"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "無料の音声入力を使い切りました。続けるにはAltboardを開いてください"
+            "value": "無料の音声入力を使い切りました。続けるにはVoxBoardを開いてください"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "무료 받아쓰기를 모두 사용했습니다. 계속하려면 Altboard를 여세요"
+            "value": "무료 받아쓰기를 모두 사용했습니다. 계속하려면 VoxBoard를 여세요"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nemokamas diktavimas išnaudotas. Norėdami tęsti, atidarykite Altboard programėlę"
+            "value": "Nemokamas diktavimas išnaudotas. Norėdami tęsti, atidarykite VoxBoard programėlę"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bezmaksas diktēšana ir izlietota. Lai turpinātu, atveriet Altboard lietotni"
+            "value": "Bezmaksas diktēšana ir izlietota. Lai turpinātu, atveriet VoxBoard lietotni"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gratis diktering er brukt opp. Åpne Altboard for å fortsette"
+            "value": "Gratis diktering er brukt opp. Åpne VoxBoard for å fortsette"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gratis dicteren is op. Open Altboard om verder te gaan"
+            "value": "Gratis dicteren is op. Open VoxBoard om verder te gaan"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Darmowe dyktowanie zostało wykorzystane. Otwórz Altboard, aby kontynuować"
+            "value": "Darmowe dyktowanie zostało wykorzystane. Otwórz VoxBoard, aby kontynuować"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O ditado gratuito acabou. Abra o Altboard para continuar"
+            "value": "O ditado gratuito acabou. Abra o VoxBoard para continuar"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dictarea gratuită s-a epuizat. Deschideți aplicația Altboard pentru a continua"
+            "value": "Dictarea gratuită s-a epuizat. Deschideți aplicația VoxBoard pentru a continua"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Бесплатная диктовка закончилась. Откройте Altboard, чтобы продолжить"
+            "value": "Бесплатная диктовка закончилась. Откройте VoxBoard, чтобы продолжить"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bezplatné diktovanie je vyčerpané. Otvorte Altboard a pokračujte"
+            "value": "Bezplatné diktovanie je vyčerpané. Otvorte VoxBoard a pokračujte"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brezplačno narekovanje je porabljeno. Za nadaljevanje odprite Altboard"
+            "value": "Brezplačno narekovanje je porabljeno. Za nadaljevanje odprite VoxBoard"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gratis diktering är slut. Öppna Altboard för att fortsätta"
+            "value": "Gratis diktering är slut. Öppna VoxBoard för att fortsätta"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ücretsiz dikte hakkınız bitti. Devam etmek için Altboard’u açın"
+            "value": "Ücretsiz dikte hakkınız bitti. Devam etmek için VoxBoard’u açın"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Безплатне диктування закінчилося. Відкрийте Altboard, щоб продовжити"
+            "value": "Безплатне диктування закінчилося. Відкрийте VoxBoard, щоб продовжити"
           }
         },
         "zh": {
           "stringUnit": {
             "state": "translated",
-            "value": "免费听写已用完。请打开 Altboard 继续"
+            "value": "免费听写已用完。请打开 VoxBoard 继续"
           }
         }
       }
     },
-    "Full Access is disabled. Open the Altboard app for setup instructions": {
+    "Full Access is disabled. Open the VoxBoard app for setup instructions": {
       "localizations": {
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plný přístup je vypnutý. Otevřete aplikaci Altboard pro pokyny k nastavení"
+            "value": "Plný přístup je vypnutý. Otevřete aplikaci VoxBoard pro pokyny k nastavení"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fuld adgang er deaktiveret. Åbn Altboard-appen for opsætningsinstruktioner"
+            "value": "Fuld adgang er deaktiveret. Åbn VoxBoard-appen for opsætningsinstruktioner"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vollzugriff ist deaktiviert. Öffnen Sie die Altboard-App zur Einrichtung."
+            "value": "Vollzugriff ist deaktiviert. Öffnen Sie die VoxBoard-App zur Einrichtung."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Η πλήρης πρόσβαση είναι απενεργοποιημένη. Ανοίξτε την εφαρμογή Altboard για οδηγίες ρύθμισης"
+            "value": "Η πλήρης πρόσβαση είναι απενεργοποιημένη. Ανοίξτε την εφαρμογή VoxBoard για οδηγίες ρύθμισης"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El acceso completo está desactivado. Abra la app Altboard para ver las instrucciones de configuración"
+            "value": "El acceso completo está desactivado. Abra la app VoxBoard para ver las instrucciones de configuración"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Täysi käyttöoikeus on pois käytöstä. Avaa Altboard-ohjelma ja katso käyttöönotto-ohjeet"
+            "value": "Täysi käyttöoikeus on pois käytöstä. Avaa VoxBoard-ohjelma ja katso käyttöönotto-ohjeet"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accès complet désactivé. Ouvrez l’application Altboard pour la configuration."
+            "value": "Accès complet désactivé. Ouvrez l’application VoxBoard pour la configuration."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "पूर्ण एक्सेस अक्षम है। सेटअप निर्देशों के लिए Altboard ऐप खोलें"
+            "value": "पूर्ण एक्सेस अक्षम है। सेटअप निर्देशों के लिए VoxBoard ऐप खोलें"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A teljes hozzáférés ki van kapcsolva. A beállítási útmutatóért nyissa meg az Altboard alkalmazást"
+            "value": "A teljes hozzáférés ki van kapcsolva. A beállítási útmutatóért nyissa meg az VoxBoard alkalmazást"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso completo disattivato. Apra l’app Altboard per le istruzioni di configurazione."
+            "value": "Accesso completo disattivato. Apra l’app VoxBoard per le istruzioni di configurazione."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "フルアクセスが無効です。設定手順についてはAltboardアプリを開いてください"
+            "value": "フルアクセスが無効です。設定手順についてはVoxBoardアプリを開いてください"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "전체 접근이 비활성화되어 있습니다. 설정 안내를 보려면 Altboard 앱을 여세요"
+            "value": "전체 접근이 비활성화되어 있습니다. 설정 안내를 보려면 VoxBoard 앱을 여세요"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Volledige toegang is uitgeschakeld. Open de Altboard-app voor installatie-instructies"
+            "value": "Volledige toegang is uitgeschakeld. Open de VoxBoard-app voor installatie-instructies"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Full tilgang er deaktivert. Åpne Altboard-appen for oppsettsanvisninger"
+            "value": "Full tilgang er deaktivert. Åpne VoxBoard-appen for oppsettsanvisninger"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pełny dostęp jest wyłączony. Otwórz aplikację Altboard, aby uzyskać instrukcje konfiguracji"
+            "value": "Pełny dostęp jest wyłączony. Otwórz aplikację VoxBoard, aby uzyskać instrukcje konfiguracji"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acesso completo está desativado. Abra o app Altboard para ver as instruções de configuração"
+            "value": "Acesso completo está desativado. Abra o app VoxBoard para ver as instruções de configuração"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesul complet este dezactivat. Deschideți aplicația Altboard pentru instrucțiuni de configurare"
+            "value": "Accesul complet este dezactivat. Deschideți aplicația VoxBoard pentru instrucțiuni de configurare"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Полный доступ отключён. Откройте приложение Altboard для инструкций по настройке"
+            "value": "Полный доступ отключён. Откройте приложение VoxBoard для инструкций по настройке"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plný prístup je vypnutý. Otvorte aplikáciu Altboard pre pokyny na nastavenie"
+            "value": "Plný prístup je vypnutý. Otvorte aplikáciu VoxBoard pre pokyny na nastavenie"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fullständig åtkomst är inaktiverad. Öppna Altboard-appen för konfigurationsanvisningar"
+            "value": "Fullständig åtkomst är inaktiverad. Öppna VoxBoard-appen för konfigurationsanvisningar"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tam Erişim devre dışı. Kurulum talimatları için Altboard uygulamasını açın"
+            "value": "Tam Erişim devre dışı. Kurulum talimatları için VoxBoard uygulamasını açın"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Повний доступ вимкнено. Відкрийте застосунок Altboard для інструкцій з налаштування"
+            "value": "Повний доступ вимкнено. Відкрийте застосунок VoxBoard для інструкцій з налаштування"
           }
         },
         "zh": {
           "stringUnit": {
             "state": "translated",
-            "value": "完全访问已禁用。请打开 Altboard 应用查看设置说明"
+            "value": "完全访问已禁用。请打开 VoxBoard 应用查看设置说明"
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пълният достъп е изключен. Отворете приложението Altboard за инструкции по настройка"
+            "value": "Пълният достъп е изключен. Отворете приложението VoxBoard за инструкции по настройка"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Potpuni pristup je isključen. Otvorite aplikaciju Altboard za upute za postavljanje"
+            "value": "Potpuni pristup je isključen. Otvorite aplikaciju VoxBoard za upute za postavljanje"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Täielik juurdepääs on välja lülitatud. Seadistusjuhiste saamiseks avage rakendus Altboard"
+            "value": "Täielik juurdepääs on välja lülitatud. Seadistusjuhiste saamiseks avage rakendus VoxBoard"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pilna piekļuve ir izslēgta. Atveriet Altboard lietotni iestatīšanas instrukcijām"
+            "value": "Pilna piekļuve ir izslēgta. Atveriet VoxBoard lietotni iestatīšanas instrukcijām"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visapusiška prieiga išjungta. Atidarykite Altboard programėlę, kad gautumėte sąrankos instrukcijas"
+            "value": "Visapusiška prieiga išjungta. Atidarykite VoxBoard programėlę, kad gautumėte sąrankos instrukcijas"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Polni dostop je onemogočen. Odprite aplikacijo Altboard za navodila za nastavitev"
+            "value": "Polni dostop je onemogočen. Odprite aplikacijo VoxBoard za navodila za nastavitev"
           }
         }
       }
     },
-    "Microphone is disabled. Allow Altboard microphone access to recognize your speech": {
+    "Microphone is disabled. Allow VoxBoard microphone access to recognize your speech": {
       "localizations": {
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon je vypnutý. Povolte Altboardu přístup k mikrofonu pro rozpoznávání řeči"
+            "value": "Mikrofon je vypnutý. Povolte VoxBoardu přístup k mikrofonu pro rozpoznávání řeči"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofonen er deaktiveret. Tillad Altboard mikrofonadgang for at genkende din tale"
+            "value": "Mikrofonen er deaktiveret. Tillad VoxBoard mikrofonadgang for at genkende din tale"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon ist deaktiviert. Erlauben Sie den Mikrofonzugriff für Altboard, um Ihre Sprache zu erkennen."
+            "value": "Mikrofon ist deaktiviert. Erlauben Sie den Mikrofonzugriff für VoxBoard, um Ihre Sprache zu erkennen."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Το μικρόφωνο είναι απενεργοποιημένο. Επιτρέψτε στο Altboard πρόσβαση στο μικρόφωνο για να αναγνωρίζει την ομιλία σας"
+            "value": "Το μικρόφωνο είναι απενεργοποιημένο. Επιτρέψτε στο VoxBoard πρόσβαση στο μικρόφωνο για να αναγνωρίζει την ομιλία σας"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El micrófono está desactivado. Permita a Altboard acceder al micrófono para reconocer su voz"
+            "value": "El micrófono está desactivado. Permita a VoxBoard acceder al micrófono para reconocer su voz"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofoni on pois käytöstä. Salli Altboardille mikrofonin käyttö, jotta puhe voidaan tunnistaa"
+            "value": "Mikrofoni on pois käytöstä. Salli VoxBoardille mikrofonin käyttö, jotta puhe voidaan tunnistaa"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le microphone est désactivé. Autorisez l’accès au microphone pour Altboard afin de reconnaître votre voix."
+            "value": "Le microphone est désactivé. Autorisez l’accès au microphone pour VoxBoard afin de reconnaître votre voix."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "माइक्रोफ़ोन अक्षम है। आपकी आवाज़ पहचानने के लिए Altboard को माइक्रोफ़ोन एक्सेस दें"
+            "value": "माइक्रोफ़ोन अक्षम है। आपकी आवाज़ पहचानने के लिए VoxBoard को माइक्रोफ़ोन एक्सेस दें"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A mikrofon ki van kapcsolva. A beszédfelismeréshez engedélyezze az Altboard mikrofon-hozzáférését"
+            "value": "A mikrofon ki van kapcsolva. A beszédfelismeréshez engedélyezze az VoxBoard mikrofon-hozzáférését"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microfono disattivato. Conceda ad Altboard l’accesso al microfono per riconoscere il Suo parlato."
+            "value": "Microfono disattivato. Conceda ad VoxBoard l’accesso al microfono per riconoscere il Suo parlato."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "マイクが無効です。音声を認識するためにAltboardのマイクアクセスを許可してください"
+            "value": "マイクが無効です。音声を認識するためにVoxBoardのマイクアクセスを許可してください"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마이크가 비활성화되어 있습니다. 음성을 인식하려면 Altboard에 마이크 접근을 허용하세요"
+            "value": "마이크가 비활성화되어 있습니다. 음성을 인식하려면 VoxBoard에 마이크 접근을 허용하세요"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microfoon is uitgeschakeld. Geef Altboard microfoontoegang om uw spraak te herkennen"
+            "value": "Microfoon is uitgeschakeld. Geef VoxBoard microfoontoegang om uw spraak te herkennen"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofonen er deaktivert. Gi Altboard mikrofontilgang for å gjenkjenne talen din"
+            "value": "Mikrofonen er deaktivert. Gi VoxBoard mikrofontilgang for å gjenkjenne talen din"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon jest wyłączony. Zezwól Altboardowi na dostęp do mikrofonu, aby rozpoznawał mowę"
+            "value": "Mikrofon jest wyłączony. Zezwól VoxBoardowi na dostęp do mikrofonu, aby rozpoznawał mowę"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O microfone está desativado. Permita o acesso ao microfone do Altboard para reconhecer sua fala"
+            "value": "O microfone está desativado. Permita o acesso ao microfone do VoxBoard para reconhecer sua fala"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microfonul este dezactivat. Permiteți Altboard accesul la microfon pentru a vă recunoaște vocea"
+            "value": "Microfonul este dezactivat. Permiteți VoxBoard accesul la microfon pentru a vă recunoaște vocea"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Микрофон отключён. Разрешите Altboard доступ к микрофону для распознавания речи"
+            "value": "Микрофон отключён. Разрешите VoxBoard доступ к микрофону для распознавания речи"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofón je vypnutý. Povoľte Altboardu prístup k mikrofónu na rozpoznávanie reči"
+            "value": "Mikrofón je vypnutý. Povoľte VoxBoardu prístup k mikrofónu na rozpoznávanie reči"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofonen är inaktiverad. Ge Altboard mikrofonåtkomst för att känna igen ditt tal"
+            "value": "Mikrofonen är inaktiverad. Ge VoxBoard mikrofonåtkomst för att känna igen ditt tal"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon devre dışı. Konuşmanızı tanıyabilmek için Altboard’a mikrofon erişimi verin"
+            "value": "Mikrofon devre dışı. Konuşmanızı tanıyabilmek için VoxBoard’a mikrofon erişimi verin"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Мікрофон вимкнено. Дозвольте Altboard доступ до мікрофона для розпізнавання мовлення"
+            "value": "Мікрофон вимкнено. Дозвольте VoxBoard доступ до мікрофона для розпізнавання мовлення"
           }
         },
         "zh": {
           "stringUnit": {
             "state": "translated",
-            "value": "麦克风已禁用。请允许 Altboard 使用麦克风以识别您的语音"
+            "value": "麦克风已禁用。请允许 VoxBoard 使用麦克风以识别您的语音"
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Микрофонът е изключен. Разрешете на Altboard достъп до микрофона, за да разпознава речта Ви"
+            "value": "Микрофонът е изключен. Разрешете на VoxBoard достъп до микрофона, за да разпознава речта Ви"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon je isključen. Dopustite Altboardu pristup mikrofonu za prepoznavanje vašeg govora"
+            "value": "Mikrofon je isključen. Dopustite VoxBoardu pristup mikrofonu za prepoznavanje vašeg govora"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon on välja lülitatud. Kõne tuvastamiseks lubage Altboardile juurdepääs mikrofonile"
+            "value": "Mikrofon on välja lülitatud. Kõne tuvastamiseks lubage VoxBoardile juurdepääs mikrofonile"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofons ir izslēgts. Atļaujiet Altboard piekļuvi mikrofonam, lai atpazītu Jūsu runu"
+            "value": "Mikrofons ir izslēgts. Atļaujiet VoxBoard piekļuvi mikrofonam, lai atpazītu Jūsu runu"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofonas išjungtas. Leiskite Altboard prieigą prie mikrofono, kad atpažintų Jūsų kalbą"
+            "value": "Mikrofonas išjungtas. Leiskite VoxBoard prieigą prie mikrofono, kad atpažintų Jūsų kalbą"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mikrofon je onemogočen. Dovolite Altboardu dostop do mikrofona za prepoznavanje govora"
+            "value": "Mikrofon je onemogočen. Dovolite VoxBoardu dostop do mikrofona za prepoznavanje govora"
           }
         }
       }
@@ -3214,180 +3214,180 @@
         }
       }
     },
-    "Parakeet v3 was updated. Open Altboard to download it again": {
+    "Parakeet v3 was updated. Open VoxBoard to download it again": {
       "localizations": {
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 беше обновен. Отворете Altboard, за да го изтеглите отново"
+            "value": "Parakeet v3 беше обновен. Отворете VoxBoard, за да го изтеглите отново"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 byl aktualizován. Otevřete Altboard a stáhněte jej znovu"
+            "value": "Parakeet v3 byl aktualizován. Otevřete VoxBoard a stáhněte jej znovu"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 er opdateret. Åbn Altboard for at downloade den igen"
+            "value": "Parakeet v3 er opdateret. Åbn VoxBoard for at downloade den igen"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 wurde aktualisiert. Öffnen Sie Altboard, um es erneut herunterzuladen"
+            "value": "Parakeet v3 wurde aktualisiert. Öffnen Sie VoxBoard, um es erneut herunterzuladen"
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Το Parakeet v3 ενημερώθηκε. Ανοίξτε το Altboard για να το κατεβάσετε ξανά"
+            "value": "Το Parakeet v3 ενημερώθηκε. Ανοίξτε το VoxBoard για να το κατεβάσετε ξανά"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 se ha actualizado. Abra Altboard para descargarlo de nuevo"
+            "value": "Parakeet v3 se ha actualizado. Abra VoxBoard para descargarlo de nuevo"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 on uuendatud. Avage rakendus Altboard ja laadige mudel uuesti alla"
+            "value": "Parakeet v3 on uuendatud. Avage rakendus VoxBoard ja laadige mudel uuesti alla"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 on päivitetty. Avaa Altboard-ohjelma ja lataa malli uudelleen"
+            "value": "Parakeet v3 on päivitetty. Avaa VoxBoard-ohjelma ja lataa malli uudelleen"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 a été mis à jour. Ouvrez Altboard pour le retélécharger"
+            "value": "Parakeet v3 a été mis à jour. Ouvrez VoxBoard pour le retélécharger"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 अपडेट किया गया है। इसे फिर से डाउनलोड करने के लिए Altboard खोलें"
+            "value": "Parakeet v3 अपडेट किया गया है। इसे फिर से डाउनलोड करने के लिए VoxBoard खोलें"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 je ažuriran. Otvorite Altboard i preuzmite ga ponovno"
+            "value": "Parakeet v3 je ažuriran. Otvorite VoxBoard i preuzmite ga ponovno"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A Parakeet v3 frissült. Nyissa meg az Altboard alkalmazást, és töltse le újra a modellt"
+            "value": "A Parakeet v3 frissült. Nyissa meg az VoxBoard alkalmazást, és töltse le újra a modellt"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 è stato aggiornato. Apra Altboard per riscaricarlo"
+            "value": "Parakeet v3 è stato aggiornato. Apra VoxBoard per riscaricarlo"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3が更新されました。再ダウンロードするにはAltboardを開いてください"
+            "value": "Parakeet v3が更新されました。再ダウンロードするにはVoxBoardを開いてください"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 모델이 업데이트되었습니다. Altboard를 열어 다시 다운로드하세요"
+            "value": "Parakeet v3 모델이 업데이트되었습니다. VoxBoard를 열어 다시 다운로드하세요"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 atnaujintas. Atidarykite Altboard programėlę ir atsisiųskite jį iš naujo"
+            "value": "Parakeet v3 atnaujintas. Atidarykite VoxBoard programėlę ir atsisiųskite jį iš naujo"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 ir atjaunināts. Atveriet Altboard lietotni un lejupielādējiet modeli vēlreiz"
+            "value": "Parakeet v3 ir atjaunināts. Atveriet VoxBoard lietotni un lejupielādējiet modeli vēlreiz"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 is bijgewerkt. Open Altboard om het opnieuw te downloaden"
+            "value": "Parakeet v3 is bijgewerkt. Open VoxBoard om het opnieuw te downloaden"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 er oppdatert. Åpne Altboard for å laste den ned igjen"
+            "value": "Parakeet v3 er oppdatert. Åpne VoxBoard for å laste den ned igjen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 został zaktualizowany. Otwórz Altboard, aby pobrać go ponownie"
+            "value": "Parakeet v3 został zaktualizowany. Otwórz VoxBoard, aby pobrać go ponownie"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Parakeet v3 foi atualizado. Abra o Altboard para baixá-lo novamente"
+            "value": "O Parakeet v3 foi atualizado. Abra o VoxBoard para baixá-lo novamente"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 a fost actualizat. Deschideți aplicația Altboard pentru a-l descărca din nou"
+            "value": "Parakeet v3 a fost actualizat. Deschideți aplicația VoxBoard pentru a-l descărca din nou"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Модель Parakeet v3 обновилась. Откройте Altboard и скачайте её снова"
+            "value": "Модель Parakeet v3 обновилась. Откройте VoxBoard и скачайте её снова"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 bol aktualizovaný. Otvorte Altboard a stiahnite ho znova"
+            "value": "Parakeet v3 bol aktualizovaný. Otvorte VoxBoard a stiahnite ho znova"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 je bil posodobljen. Odprite Altboard in ga znova prenesite"
+            "value": "Parakeet v3 je bil posodobljen. Odprite VoxBoard in ga znova prenesite"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 har uppdaterats. Öppna Altboard för att ladda ner den igen"
+            "value": "Parakeet v3 har uppdaterats. Öppna VoxBoard för att ladda ner den igen"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 güncellendi. Tekrar indirmek için Altboard’u açın"
+            "value": "Parakeet v3 güncellendi. Tekrar indirmek için VoxBoard’u açın"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Модель Parakeet v3 оновилася. Відкрийте Altboard і завантажте її знову"
+            "value": "Модель Parakeet v3 оновилася. Відкрийте VoxBoard і завантажте її знову"
           }
         },
         "zh": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parakeet v3 已更新。请打开 Altboard 重新下载"
+            "value": "Parakeet v3 已更新。请打开 VoxBoard 重新下载"
           }
         }
       }

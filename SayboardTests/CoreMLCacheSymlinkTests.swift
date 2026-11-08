@@ -69,11 +69,11 @@ struct CoreMLCacheSymlinkTests {
   }
 
   private static func cachesURL(in root: URL, container: String) -> URL {
-    root.appendingPathComponent("\(container)/Library/Caches/app.sayboard/com.apple.e5rt.e5bundlecache")
+    root.appendingPathComponent("\(container)/Library/Caches/app.voxboard/com.apple.e5rt.e5bundlecache")
   }
 
   private static func persistentURL(in root: URL, container: String) -> URL {
-    root.appendingPathComponent("\(container)/Library/Application Support/app.sayboard/CoreMLCache")
+    root.appendingPathComponent("\(container)/Library/Application Support/app.voxboard/CoreMLCache")
   }
 
   private static func writeCompiledEntry(in persistent: URL) throws -> URL {

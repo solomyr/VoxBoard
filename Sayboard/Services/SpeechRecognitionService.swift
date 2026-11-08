@@ -34,6 +34,8 @@ final class SpeechRecognitionService: ObservableObject {
   let accumulator = AudioBufferAccumulator()
   let audioRecorder = AudioRecorder()
   var currentTranscription = ""
+  var rawTranscription = ""
+  var deliversToKeyboard = true
   var currentAudioFileName: String?
   var currentWordBoundaries: (start: Float, end: Float)?
 
@@ -66,6 +68,7 @@ final class SpeechRecognitionService: ObservableObject {
 
     self.errorMessage = nil
     self.currentTranscription = ""
+    self.rawTranscription = ""
     self.currentAudioFileName = "\(UUID().uuidString).caf"
 
     guard self.ensureSessionActive() else {
@@ -80,7 +83,8 @@ final class SpeechRecognitionService: ObservableObject {
     TranscriptionBridge.postDarwinNotification(DarwinNotificationName.dictationStarted)
   }
 
-  func startCapture() {
+  func startCapture(deliverToKeyboard: Bool = true) {
+    self.deliversToKeyboard = deliverToKeyboard
     let micAuth = self.settings.isMicrophoneAuthorized
     let _ = self.session.isSessionActive
     let _ = self.session.audioEngine.isRunning
@@ -96,6 +100,7 @@ final class SpeechRecognitionService: ObservableObject {
 
     self.errorMessage = nil
     self.currentTranscription = ""
+    self.rawTranscription = ""
     self.currentAudioFileName = "\(UUID().uuidString).caf"
 
     guard self.ensureSessionActive() else {
@@ -125,8 +130,17 @@ final class SpeechRecognitionService: ObservableObject {
     self.isRecording = false
     self.isStopping = true
 
+    // Finish local inference if the user leaves the app after stopping. Compose
+    // recordings release the microphone immediately; keyboard recordings keep the
+    // session ready (when enabled) so the next keyboard tap needs no app switch.
+    let processingTask = UIApplication.shared.beginBackgroundTask(withName: "Finish dictation")
+    defer {
+      if processingTask != .invalid { UIApplication.shared.endBackgroundTask(processingTask) }
+    }
     self.cancelMaxDurationTimer()
-    self.session.deactivateTap()
+    self.session.deactivateTap(
+      keepSessionReady: self.deliversToKeyboard && self.settings.keepsKeyboardMicReady
+    )
     let savedSamples = self.accumulator.samples
     let stylingHost = OnboardingTextEntry.stylingHost(self.settings.hostBundleId)
 
@@ -146,9 +160,26 @@ final class SpeechRecognitionService: ObservableObject {
 
     self.isStopping = false
     self.settings.isRecording = false
-    self.settings.dictationSessionToken = nil
     self.settings.synchronize()
     TranscriptionBridge.postDarwinNotification(DarwinNotificationName.dictationStopped)
+
+    // The mic is already off. Keep the finite processing task alive until the
+    // keyboard's cleanup request acquires its own background processing task.
+    let token = self.settings.dictationSessionToken
+    if self.deliversToKeyboard, !self.currentTranscription.isEmpty,
+       self.settings.llmEnabled, self.settings.hasUsableLLMModel,
+       self.settings.defaultLLMActionSelection.isSet {
+      let deadline = Date().addingTimeInterval(3)
+      while !self.settings.isLLMProcessing, Date() < deadline,
+            self.settings.dictationSessionToken == token {
+        try? await Task.sleep(for: .milliseconds(100))
+        self.settings.synchronize()
+      }
+    }
+    if !self.settings.isLLMProcessing, self.settings.dictationSessionToken == token {
+      self.settings.dictationSessionToken = nil
+    }
+    DiagnosticLog.exportToAppDocuments()
   }
 
   func loadModelIfAvailable(downloadService: ModelDownloadService) async {
@@ -175,7 +206,9 @@ final class SpeechRecognitionService: ObservableObject {
     self.session.endSession()
   }
 
-  func startRecordingAfterModelLoad() async {
+  func startRecordingAfterModelLoad(deliverToKeyboard: Bool = true) async {
+    guard !self.settings.isLLMProcessing else { return }
+    self.deliversToKeyboard = deliverToKeyboard
     let _ = String(describing: self.activeLoadState)
     guard !self.isStopping else {
       return
@@ -183,7 +216,7 @@ final class SpeechRecognitionService: ObservableObject {
     if self.activeLoadState == .loaded {
       self.startRecording()
     } else {
-      self.startCapture()
+      self.startCapture(deliverToKeyboard: deliverToKeyboard)
       if let downloadService {
         self.settings.isModelLoading = true
         Task {
@@ -195,12 +228,13 @@ final class SpeechRecognitionService: ObservableObject {
     }
   }
 
-  private var errorMessage: String?
+  @Published private(set) var errorMessage: String?
   private var sessionCancellable: AnyCancellable?
 
   private var requestStartObserver: DarwinNotificationObserver?
   private var requestStopObserver: DarwinNotificationObserver?
   private var sessionStatusObserver: DarwinNotificationObserver?
+  private var endSessionObserver: DarwinNotificationObserver?
 
   private var maxDurationTimer: Timer?
 
@@ -281,6 +315,11 @@ extension SpeechRecognitionService {
 
   func setupDarwinObservers() {
     self.setupDictationObservers()
+    self.endSessionObserver = TranscriptionBridge.observeDarwinNotification(
+      DarwinNotificationName.requestEndSession
+    ) { [weak self] in
+      Task { @MainActor [weak self] in self?.session.endSession() }
+    }
     self.sessionStatusObserver = TranscriptionBridge.observeDarwinNotification(
       DarwinNotificationName.requestSessionStatus
     ) { [weak self] in
@@ -300,9 +339,11 @@ extension SpeechRecognitionService {
 
   func setupSessionCallbacks() {
     self.session.onInterruptionBegan = { [weak self] in
+      guard self?.isRecording == true else { return }
       Task { @MainActor [weak self] in await self?.stopRecording() }
     }
     self.session.onSessionEnded = { [weak self] in
+      guard self?.isRecording == true else { return }
       Task { @MainActor [weak self] in await self?.stopRecording() }
     }
   }

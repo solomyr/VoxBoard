@@ -35,7 +35,7 @@ struct SharedSettingsGlobeKeyTests {
   }
 
   private static func uniqueSuiteName() -> String {
-    "app.sayboard.tests.\(UUID().uuidString)"
+    "app.voxboard.tests.\(UUID().uuidString)"
   }
 
   private static func cleanup(suiteName: String) {

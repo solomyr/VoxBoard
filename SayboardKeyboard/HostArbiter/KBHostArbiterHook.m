@@ -37,7 +37,7 @@ static BOOL IsAcceptableBundleId(NSString *_Nullable bid) {
   // Reject our own app and its keyboard, and the Home Screen (not a return target). Real system
   // apps like com.apple.mobilesafari ARE valid hosts, so do NOT blanket-reject com.apple.* --
   // doing so made the cache fall back to the previous third-party host for every system app.
-  if ([bid hasPrefix:@"app.sayboard"]) return NO;
+  if ([bid hasPrefix:@"app.voxboard"]) return NO;
   if ([bid isEqualToString:[NSBundle mainBundle].bundleIdentifier]) return NO;
   if ([bid isEqualToString:@"com.apple.springboard"]) return NO;
   return YES;

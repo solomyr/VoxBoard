@@ -1,90 +1,23 @@
 import SwiftUI
 
-private struct PillContent: View {
-
-  let showingMic: Bool
-  let timeString: String
-
-  var body: some View {
-    Text(self.timeString)
-      .font(Self.pillFont)
-      .hidden()
-      .overlay {
-        if self.showingMic {
-          Image(systemName: "mic.fill")
-            .font(.system(size: Self.pillIconSize, weight: .semibold))
-        } else {
-          Text(self.timeString)
-            .font(Self.pillFont)
-        }
-      }
-      .foregroundStyle(.white)
-      .padding(.horizontal, Self.pillPaddingH)
-      .padding(.vertical, Self.pillPaddingV)
-      .background(Color.orange, in: Capsule())
-  }
-
-  private static let pillFont = Font.system(size: 10, weight: .semibold)
-  private static let pillIconSize: CGFloat = 10
-  private static let pillPaddingH: CGFloat = 11
-  private static let pillPaddingV: CGFloat = 5
-}
-
 struct SessionInfoView: View {
-
   var body: some View {
-    ScrollView {
-      self.composedText
-        .onAppear { self.renderPill() }
-        .onReceive(self.timer) { _ in
-          self.showingMic.toggle()
-          self.renderPill()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
+    List {
+      Section("Tap or hold to record") {
+        Text("Tap the keyboard microphone to start, and tap again to finish. Or hold it while you speak and let go to finish. Your words are transcribed, polished if the AI writer is on, and inserted where you are typing, all on this device.")
+      }
+      Section("Why VoxBoard opens once") {
+        Text("iOS does not let keyboards use the microphone. The VoxBoard app records for the keyboard instead, so the first recording opens VoxBoard for a moment to turn the microphone on, then returns you to the app where you were typing.")
+        Text("With Instant keyboard dictation on, VoxBoard keeps the microphone ready afterwards, so later recordings happen right in the keyboard with no app switch. Nothing is captured until you tap the mic. After the idle time you choose in Settings, the microphone turns off and the next recording opens VoxBoard again.")
+      }
+      Section("The orange indicator") {
+        Text("iOS shows the orange microphone indicator the whole time VoxBoard is ready, not only while you speak. Keeping it ready also uses some battery. You can turn it off from the keyboard or in Settings at any time. A phone call or other audio interruption turns it off and it does not restart by itself.")
+      }
+      Section("Your audio") {
+        Text("While you dictate, VoxBoard saves audio and transcribes it on this device. Review or delete recordings in History and choose how long they are kept in Settings. No audio or text is uploaded for processing.")
+      }
     }
-    .navigationTitle("Active Session Info")
+    .navigationTitle("Microphone access")
     .navigationBarTitleDisplayMode(.inline)
-  }
-
-  private static let toggleInterval: TimeInterval = 3
-  private static let pillTrailingPad: CGFloat = 10
-
-  private static let pillBaselineOffset: CGFloat = {
-    let bodyFont = UIFont.preferredFont(forTextStyle: .body)
-    let pillFont = UIFont.systemFont(ofSize: 10, weight: .semibold)
-    let pillHeight = pillFont.lineHeight + 2 * 5
-    return (bodyFont.ascender + bodyFont.descender - pillHeight) / 2
-  }()
-
-  private static let infoText: LocalizedStringKey = "\u{2014} if you spot this orange indicator in the corner, there\u{2019}s nothing to worry about. It simply means Altboard is keeping the microphone session ready, so the keyboard can start dictation the instant you want it. Nothing is recorded in the background \u{2014} the microphone only turns on when you press the record button. Whatever you say stays on your device and never leaves it. Altboard\u{2019}s code is open \u{2014} if you like, you can go through it yourself and see first-hand that this is true.\n\nWhen you tap record, you\u{2019}ll see the app open for a moment. The system doesn\u{2019}t allow keyboards to use the microphone directly, so Altboard briefly opens to turn it on, and then you\u{2019}re back to what you were typing. Prefer to see that less often? Increase the \u{201C}Auto-Stop\u{201D} time \u{2014} the lower it is, the more often you\u{2019}ll make that round trip.\n\nThe convenience of instant dictation does come at a small battery cost \u{2014} usually up to about 15% of your charge over a full day."
-
-  @Environment(\.displayScale) private var displayScale
-
-  @State private var showingMic = true
-  @State private var pillImage: Image?
-
-  private let timer = Timer
-    .publish(every: Self.toggleInterval, on: .main, in: .common)
-    .autoconnect()
-
-  private var composedText: Text {
-    if let image = self.pillImage {
-      Text(image).baselineOffset(Self.pillBaselineOffset) + Text(Self.infoText)
-    } else {
-      Text(Self.infoText)
-    }
-  }
-
-  @MainActor
-  private func renderPill() {
-    let timeString = Date.now.formatted(.dateTime.hour().minute())
-    let content = PillContent(showingMic: self.showingMic, timeString: timeString)
-      .padding(.trailing, Self.pillTrailingPad)
-    let renderer = ImageRenderer(content: content)
-    renderer.scale = self.displayScale
-    if let uiImage = renderer.uiImage {
-      self.pillImage = Image(uiImage: uiImage)
-    }
   }
 }

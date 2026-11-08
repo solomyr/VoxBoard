@@ -5,7 +5,7 @@ import Testing
 @Suite("Finding the keyboard arbitration callback")
 struct HostApplicationMonitorTests {
 
-  @Test
+  @Test(.enabled(if: Self.hasPDFExtensionContext, "This SDK does not include PDFExtensionContext"))
   func `finding the callback does not switch the process preferences to direct mode`() throws {
     try #require(dlopen(Self.pdfKitPath, RTLD_NOW) != nil)
     try #require(objc_lookUpClass(Self.preferencesSwitchingClassName) != nil)
@@ -21,6 +21,10 @@ struct HostApplicationMonitorTests {
   private static let pdfKitPath = "/System/Library/Frameworks/PDFKit.framework/PDFKit"
   private static let preferencesSwitchingClassName = "PDFExtensionContext"
   private static let coreFoundationPath = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+
+  private static var hasPDFExtensionContext: Bool {
+    dlopen(self.pdfKitPath, RTLD_NOW) != nil && objc_lookUpClass(self.preferencesSwitchingClassName) != nil
+  }
 
   private static func preferencesDirectMode() -> (() -> Bool)? {
     guard

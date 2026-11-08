@@ -11,8 +11,8 @@ struct LLMGenerationBudgetTests {
   }
 
   @Test
-  func `one token past the batch is refused`() {
-    #expect(Self.budget(promptTokens: 513) == nil)
+  func `prompts larger than a batch are admitted for chunked decoding`() {
+    #expect(Self.budget(promptTokens: 513) == 495)
   }
 
   @Test

@@ -41,7 +41,7 @@ struct NewNameNoticeTests {
   private static let onboardingCompletedKey = "hasCompletedOnboarding"
 
   private static func makeDefaults(onboardingCompleted: Bool) throws -> UserDefaults {
-    let suiteName = "app.sayboard.tests.\(UUID().uuidString)"
+    let suiteName = "app.voxboard.tests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defaults.removePersistentDomain(forName: suiteName)
     defaults.set(onboardingCompleted, forKey: Self.onboardingCompletedKey)

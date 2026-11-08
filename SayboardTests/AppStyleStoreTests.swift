@@ -139,7 +139,7 @@ private enum AppStyleFixture {
   }
 
   static func uniqueSuiteName() -> String {
-    "app.sayboard.tests.\(UUID().uuidString)"
+    "app.voxboard.tests.\(UUID().uuidString)"
   }
 
   static func entry(_ bundleId: String, _ style: WritingStyle) -> AppStyleEntry {

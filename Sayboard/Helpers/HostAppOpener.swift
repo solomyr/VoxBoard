@@ -1,88 +1,22 @@
-
+import UIKit
 
 enum HostAppOpener {
-
   @MainActor
   static func open(bundleId: String) -> Bool {
-    guard let cls = resolveClass(), let workspace = defaultWorkspace(cls: cls) else {
-      return false
-    }
-    let sel = self.openSelector()
-    guard workspace.responds(to: sel) else {
-      return false
-    }
-    _ = workspace.perform(sel, with: bundleId)
-    return true
+    // AltBoard's automatic return path uses undocumented Launch Services.
+    // Keep the names explicit and fail gracefully if iOS changes the API.
+    guard !bundleId.isEmpty, bundleId != "app.voxboard", bundleId != "app.voxboard.keyboard",
+      bundleId != "com.apple.springboard",
+      let cls = NSClassFromString("LSApplicationWorkspace") as? NSObject.Type
+    else { return false }
+    let getter = NSSelectorFromString("defaultWorkspace")
+    guard cls.responds(to: getter),
+      let workspace = cls.perform(getter)?.takeUnretainedValue() as? NSObject
+    else { return false }
+    let selector = NSSelectorFromString("openApplicationWithBundleID:")
+    guard workspace.responds(to: selector) else { return false }
+    typealias OpenApplication = @convention(c) (NSObject, Selector, NSString) -> Bool
+    let open = unsafeBitCast(workspace.method(for: selector), to: OpenApplication.self)
+    return open(workspace, selector, bundleId as NSString)
   }
-
-  private static func resolveClass() -> NSObject.Type? {
-    let bytes: [UInt8] = [
-      76,
-      83,
-      65,
-      112,
-      112,
-      108,
-      105,
-      99,
-      97,
-      116,
-      105,
-      111,
-      110,
-      87,
-      111,
-      114,
-      107,
-      115,
-      112,
-      97,
-      99,
-      101,
-    ]
-    let name = String(bytes.map { Character(UnicodeScalar($0)) })
-    return NSClassFromString(name) as? NSObject.Type
-  }
-
-  private static func defaultWorkspace(cls: NSObject.Type) -> NSObject? {
-    let bytes: [UInt8] = [100, 101, 102, 97, 117, 108, 116, 87, 111, 114, 107, 115, 112, 97, 99, 101]
-    let sel = NSSelectorFromString(String(bytes.map { Character(UnicodeScalar($0)) }))
-    guard cls.responds(to: sel) else { return nil }
-    return cls.perform(sel)?.takeUnretainedValue() as? NSObject
-  }
-
-  private static func openSelector() -> Selector {
-    let bytes: [UInt8] = [
-      111,
-      112,
-      101,
-      110,
-      65,
-      112,
-      112,
-      108,
-      105,
-      99,
-      97,
-      116,
-      105,
-      111,
-      110,
-      87,
-      105,
-      116,
-      104,
-      66,
-      117,
-      110,
-      100,
-      108,
-      101,
-      73,
-      68,
-      58,
-    ]
-    return NSSelectorFromString(String(bytes.map { Character(UnicodeScalar($0)) }))
-  }
-
 }

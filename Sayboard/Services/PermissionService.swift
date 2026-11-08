@@ -66,7 +66,7 @@ final class PermissionService: ObservableObject {
   }
 
   private static let appleKeyboardsKey = "AppleKeyboards"
-  private static let sayboardKeyboardId = "app.sayboard.keyboard"
+  private static let sayboardKeyboardId = "app.voxboard.keyboard"
 
   private let settings = SharedSettings()
   private var fullAccessObserver: DarwinNotificationObserver?

@@ -13,7 +13,7 @@ struct OnboardingKeyboardTypeView: View {
       )
       Spacer(minLength: Self.sectionSpacing)
       self.cardsLayout {
-        self.option(.standard, subtitle: "Big microphone button")
+        self.option(.standard, subtitle: "Letters, languages, and dictation")
         self.option(.extended, subtitle: "Numbers and symbols, smaller microphone")
       }
       .fixedSize(horizontal: false, vertical: true)

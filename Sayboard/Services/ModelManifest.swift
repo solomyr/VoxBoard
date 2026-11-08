@@ -84,7 +84,17 @@ struct ModelManifest: Decodable, Sendable {
 enum ManifestFetcher {
 
   static func fetch() async throws -> ModelManifest {
-    guard let url = URL(string: ModelServer.manifestURL) else {
+    // A pinned catalog keeps the fork independent of upstream manifest changes.
+    // A release maintainer can opt into their own HTTPS catalog via Info.plist.
+    guard let configured = Bundle.main.object(forInfoDictionaryKey: "VoxBoardModelManifestURL") as? String,
+      !configured.isEmpty
+    else {
+      guard let url = Bundle.main.url(forResource: "model-manifest", withExtension: "json") else {
+        throw ManifestError.invalidURL
+      }
+      return try JSONDecoder().decode(ModelManifest.self, from: Data(contentsOf: url))
+    }
+    guard let url = URL(string: configured), url.scheme == "https", url.host != nil else {
       throw ManifestError.invalidURL
     }
 
@@ -92,7 +102,10 @@ enum ManifestFetcher {
     do {
       var request = URLRequest(url: url)
       request.cachePolicy = .reloadIgnoringLocalCacheData
-      let (responseData, _) = try await URLSession.shared.data(for: request)
+      let (responseData, response) = try await URLSession.shared.data(for: request)
+      guard let response = response as? HTTPURLResponse, (200 ..< 300).contains(response.statusCode) else {
+        throw URLError(.badServerResponse)
+      }
       data = responseData
     } catch {
       throw ManifestError.networkError(error)

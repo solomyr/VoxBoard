@@ -11,7 +11,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "app.sayboard.fullversion",
+      "productID" : "app.voxboard.fullversion",
       "referenceName" : "Full Version",
       "type" : "NonConsumable"
     }

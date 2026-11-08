@@ -131,7 +131,7 @@ extension ModelDownloadService {
 
 func localizedDownloadError(_ error: Error) -> LocalizedStringResource {
   if case R2DownloadError.appTooOldForModel = error {
-    return "Update Altboard to use this model."
+    return "Update VoxBoard to use this model."
   }
   if isOutOfSpaceError(error) {
     return "Not enough storage space. Free up space and try again."

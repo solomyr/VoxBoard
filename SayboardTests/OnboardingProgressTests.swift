@@ -244,7 +244,7 @@ struct OnboardingProgressTests {
   }
 
   private static func makeDefaults() throws -> UserDefaults {
-    let suiteName = "app.sayboard.tests.\(UUID().uuidString)"
+    let suiteName = "app.voxboard.tests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defaults.removePersistentDomain(forName: suiteName)
     return defaults

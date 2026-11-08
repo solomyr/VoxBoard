@@ -6,8 +6,8 @@ enum KeyboardKind: String, CaseIterable, Sendable {
 
   var displayNameKey: String {
     switch self {
-    case .standard: "Standard"
-    case .extended: "Extended"
+    case .standard: "Typing + Voice"
+    case .extended: "Voice + Symbols"
     }
   }
 }

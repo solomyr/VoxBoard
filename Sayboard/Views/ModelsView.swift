@@ -50,7 +50,7 @@ struct ModelsView: View, Equatable {
         availableLanguages: variant.supportedLanguages,
         titleKey: "Recognize",
         autoDetectKey: "Auto-detect (any language)",
-        footnoteKey: "Altboard will prioritize these languages. Pick a single language for the most accurate recognition.",
+        footnoteKey: "VoxBoard will prioritize these languages. Pick a single language for the most accurate recognition.",
       )
     }
     .sensoryFeedback(.selection, trigger: self.selectionHapticTrigger)

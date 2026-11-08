@@ -45,7 +45,7 @@ struct MicrophonePromptTutorialView: View {
   }
 
   private static let coordinateSpace = "microphonePrompt"
-  private static let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Altboard"
+  private static let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "VoxBoard"
 
   private static let maxWidth: CGFloat = 300
   private static let cornerRadius: CGFloat = 28

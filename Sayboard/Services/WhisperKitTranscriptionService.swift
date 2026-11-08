@@ -37,6 +37,10 @@ final class WhisperKitTranscriptionService: ObservableObject {
     self.loadGeneration += 1
     let expectedGen = self.loadGeneration
     self.loadState = .loading
+    guard let tokenizerFolder = Self.tokenizerFolder(for: variant) else {
+      self.loadState = .error("The bundled speech tokenizer is missing. Reinstall VoxBoard.")
+      return
+    }
     let compute = Self.computeOptions(for: variant)
     let computeMode = compute == nil ? "default (ANE)" : "cpuOnly"
     let footprintBefore = ProcessFootprint.residentMB()
@@ -49,6 +53,7 @@ final class WhisperKitTranscriptionService: ObservableObject {
       do {
         let config = WhisperKitConfig(
           modelFolder: folderPath,
+          tokenizerFolder: tokenizerFolder,
           computeOptions: compute,
           load: true,
           download: false,
@@ -148,6 +153,15 @@ final class WhisperKitTranscriptionService: ObservableObject {
   }
 
   private static let noSpeechThreshold: Float = 0.6
+
+  nonisolated static func tokenizerFolder(for variant: ModelVariant) -> URL? {
+    let name = variant == .whisperTurbo ? "whisper-v3" : "whisper-multilingual"
+    guard let folder = Bundle.main.resourceURL?.appendingPathComponent("Tokenizers/\(name)"),
+      FileManager.default.fileExists(atPath: folder.appendingPathComponent("tokenizer.json").path),
+      FileManager.default.fileExists(atPath: folder.appendingPathComponent("tokenizer_config.json").path)
+    else { return nil }
+    return folder
+  }
   private static let logProbThreshold: Float = -1.0
   private static let compressionRatioThreshold: Float = 2.4
 

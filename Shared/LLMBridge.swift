@@ -6,6 +6,16 @@ struct LLMRequest: Codable, Sendable {
   let action: LLMAction
   let customPromptId: UUID?
   let language: String?
+  var replacementContext: String? = nil
+  var hostBundleId: String? = nil
+}
+
+/// Delivery metadata survives the keyboard controller being recreated during
+/// the app handoff. A result can only replace the unchanged original context.
+struct LLMResult: Codable, Sendable {
+  let text: String
+  let replacementContext: String?
+  let hostBundleId: String?
 }
 
 struct LLMBridge: Sendable {
@@ -26,16 +36,22 @@ struct LLMBridge: Sendable {
     return try? JSONDecoder().decode(LLMRequest.self, from: data)
   }
 
-  static func writeResult(_ text: String) {
+  static func writeResult(_ text: String, replacing original: String? = nil, hostBundleId: String? = nil) {
     guard let url = resultFileURL else { return }
     do {
-      try Data(text.utf8).write(to: url, options: [.atomic, .completeFileProtectionUnlessOpen])
+      let result = LLMResult(text: text, replacementContext: original, hostBundleId: hostBundleId)
+      try JSONEncoder().encode(result).write(to: url, options: [.atomic, .completeFileProtectionUnlessOpen])
     } catch { }
   }
 
   static func readResult() -> String? {
+    self.readDelivery()?.text
+  }
+
+  static func readDelivery() -> LLMResult? {
     guard let url = resultFileURL else { return nil }
-    return try? String(contentsOf: url, encoding: .utf8)
+    guard let data = try? Data(contentsOf: url) else { return nil }
+    return try? JSONDecoder().decode(LLMResult.self, from: data)
   }
 
   static func clearRequest() {

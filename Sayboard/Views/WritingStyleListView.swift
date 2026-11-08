@@ -136,7 +136,7 @@ struct WritingStyleListView: View {
       }
       .frame(minHeight: Self.searchRowMinHeight)
     } footer: {
-      Text("Altboard can’t see your installed apps. Search is performed in the App Store, so make sure you select the right app.")
+      Text("VoxBoard can’t see your installed apps. Search is performed in the App Store, so make sure you select the right app.")
     }
   }
 

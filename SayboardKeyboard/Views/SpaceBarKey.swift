@@ -45,8 +45,8 @@ struct SpaceBarKey: View {
   @ViewBuilder
   private var label: some View {
     if self.useCustomSpaceBar {
-      SayboardWordmark()
-        .fill(.primary)
+      Text(verbatim: "VoxBoard")
+        .font(.system(size: 18.kbScaled, weight: .semibold, design: .rounded))
         .opacity(self.isTrackpadActive ? 0.05 : 0.2)
         .frame(height: 21.36.kbScaled)
     } else {

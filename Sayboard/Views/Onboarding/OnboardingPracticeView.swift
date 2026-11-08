@@ -22,6 +22,7 @@ struct OnboardingPracticeView: View {
       if self.isFieldShown { self.didSucceed = true }
     }
     .onboardingTextEntry(isActive: self.isFieldShown, isPractice: true)
+    .onDisappear { self.speechService.session.endSession() }
     .sensoryFeedback(.success, trigger: self.didSucceed)
     .task(id: self.isFieldShown) {
       guard self.isFieldShown, (try? await Task.sleep(for: Self.switchLaterDelay)) != nil else { return }
@@ -85,13 +86,8 @@ struct OnboardingPracticeView: View {
   }
 
   private func start() {
-    do {
-      try self.speechService.session.startSession()
-      self.didFailToStart = false
-      withAnimation(OnboardingView.stepAnimation) { self.isFieldShown = true }
-    } catch {
-      self.didFailToStart = true
-    }
+    self.didFailToStart = false
+    withAnimation(OnboardingView.stepAnimation) { self.isFieldShown = true }
   }
 }
 
@@ -153,7 +149,7 @@ private struct OnboardingPracticeFieldView: View {
     OnboardingScreen {
       OnboardingHeader(
         title: "Switch the Keyboard",
-        subtitle: "Touch and hold \(Image(systemName: "globe")), then choose Altboard.",
+        subtitle: "Touch and hold \(Image(systemName: "globe")), then choose VoxBoard.",
       )
       KeyboardSwitchTutorialView()
         .padding(.vertical, Self.fieldTopPadding)

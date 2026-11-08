@@ -71,6 +71,14 @@ struct SharedSettings {
     nonmutating set { defaults.set(newValue.rawValue, forKey: SharedKey.sessionAutoStopPolicy) }
   }
 
+  /// Keeps the app's microphone session running between keyboard recordings so
+  /// the keyboard can record in place without switching apps. Nothing is captured
+  /// until the mic is tapped; iOS shows the orange indicator while the session runs.
+  var keepsKeyboardMicReady: Bool {
+    get { self.defaults.object(forKey: SharedKey.keepsKeyboardMicReady) as? Bool ?? true }
+    nonmutating set { defaults.set(newValue, forKey: SharedKey.keepsKeyboardMicReady) }
+  }
+
   var keyboardKind: KeyboardKind {
     get {
       guard
@@ -84,6 +92,14 @@ struct SharedSettings {
     nonmutating set { defaults.set(newValue.rawValue, forKey: SharedKey.keyboardKind) }
   }
 
+  var keyboardLanguage: KeyboardLanguage {
+    get {
+      self.defaults.string(forKey: SharedKey.keyboardLanguage)
+        .flatMap(KeyboardLanguage.init(rawValue:)) ?? .english
+    }
+    nonmutating set { self.defaults.set(newValue.rawValue, forKey: SharedKey.keyboardLanguage) }
+  }
+
   var hostBundleId: String? {
     get { self.defaults.string(forKey: SharedKey.hostBundleId) }
     nonmutating set { defaults.set(newValue, forKey: SharedKey.hostBundleId) }
@@ -92,7 +108,7 @@ struct SharedSettings {
   var canResolveHostApplication: Bool {
     get {
       guard self.defaults.object(forKey: SharedKey.canResolveHostApplication) != nil else {
-        return !OperatingSystem.isHostBundleIdBroken
+        return false
       }
       return self.defaults.bool(forKey: SharedKey.canResolveHostApplication)
     }
@@ -105,7 +121,7 @@ struct SharedSettings {
         let raw = defaults.string(forKey: SharedKey.retentionPolicy),
         let policy = HistoryRetentionPolicy(rawValue: raw)
       else {
-        return .forever
+        return .past24Hours
       }
       return policy
     }
@@ -312,7 +328,7 @@ struct SharedSettings {
   }
 
   var llmEnabled: Bool {
-    get { self.defaults.bool(forKey: SharedKey.llmEnabled) }
+    get { self.defaults.object(forKey: SharedKey.llmEnabled) as? Bool ?? true }
     nonmutating set { defaults.set(newValue, forKey: SharedKey.llmEnabled) }
   }
 
@@ -333,7 +349,7 @@ struct SharedSettings {
         self.defaults.removeObject(forKey: SharedKey.defaultLLMAction)
         return migrated
       }
-      return .none
+      return .preset(.readyToSend)
     }
     nonmutating set {
       let data = try? JSONEncoder().encode(newValue)

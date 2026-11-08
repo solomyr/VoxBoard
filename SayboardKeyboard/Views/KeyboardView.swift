@@ -60,6 +60,7 @@ struct KeyboardProxy {
 }
 
 enum SetupBlocker {
+  case sessionInactive
   case fullAccessMissing
   case micDenied
   case noModel
@@ -67,6 +68,7 @@ enum SetupBlocker {
 
   var icon: String {
     switch self {
+    case .sessionInactive: "mic.badge.plus"
     case .fullAccessMissing: "lock.open"
     case .micDenied: "mic.slash"
     case .noModel, .modelRemovedByUpdate: "arrow.down.circle"
@@ -75,15 +77,17 @@ enum SetupBlocker {
 
   var message: LocalizedStringKey {
     switch self {
-    case .fullAccessMissing: "Full Access is disabled. Open the Altboard app for setup instructions"
-    case .micDenied: "Microphone is disabled. Allow Altboard microphone access to recognize your speech"
+    case .sessionInactive: "VoxBoard could not open to start recording. Open the app once, return here, and tap the mic again."
+    case .fullAccessMissing: "Full Access is disabled. Open the VoxBoard app for setup instructions"
+    case .micDenied: "Microphone is disabled. Allow VoxBoard microphone access to recognize your speech"
     case .noModel: "No speech model yet. Download a speech model to start using voice input"
-    case .modelRemovedByUpdate: "Parakeet v3 was updated. Open Altboard to download it again"
+    case .modelRemovedByUpdate: "Parakeet v3 was updated. Open VoxBoard to download it again"
     }
   }
 
   var buttonTitle: LocalizedStringKey {
     switch self {
+    case .sessionInactive: "Open VoxBoard"
     case .fullAccessMissing: "Open Settings"
     case .micDenied: "Open Settings"
     case .noModel, .modelRemovedByUpdate: "Open Models"
@@ -92,9 +96,10 @@ enum SetupBlocker {
 
   var linkURL: URL? {
     switch self {
+    case .sessionInactive: nil
     case .fullAccessMissing: nil
-    case .micDenied: DeepLink.setupMicURL
-    case .noModel, .modelRemovedByUpdate: DeepLink.modelsURL
+    case .micDenied: nil
+    case .noModel, .modelRemovedByUpdate: nil
     }
   }
 }
@@ -130,7 +135,10 @@ struct KeyboardView: View {
   @ObservedObject var keyboardState: KeyboardState
 
   var body: some View {
-    if let blocker = self.activeBlocker {
+    if self.keyboardState.keyboardKind == .standard {
+      StandardKeyboardLayout(proxy: self.proxy, keyboardState: self.keyboardState)
+        .environment(\.keyboardHapticsEnabled, self.keyboardState.keyboardHapticsEnabled)
+    } else if let blocker = self.activeBlocker {
       VStack(spacing: 0) {
         BlockerPrompt(blocker: blocker)
         KeyboardBottomRow(
@@ -194,6 +202,8 @@ struct KeyboardView: View {
       .micDenied
     } else if !self.keyboardState.hasUsableModel {
       self.keyboardState.parakeetV3NeedsRedownload ? .modelRemovedByUpdate : .noModel
+    } else if self.keyboardState.sessionSetupRequired, !self.keyboardState.isSessionActive {
+      .sessionInactive
     } else {
       nil
     }

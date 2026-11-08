@@ -133,6 +133,7 @@ struct LLMActionSelectionTests {
     let disabled: Set<LLMAction> = [.formal, .casual]
     let result = LLMAction.enabledActions(excluding: disabled)
     #expect(result == [
+      .readyToSend,
       .removeRedundancy,
       .rewrite,
       .fixGrammar,

@@ -71,7 +71,7 @@ struct HistoryListView: View {
         """
         Your voice data never leaves your device — \
         everything is processed locally by a model you download once. \
-        No servers, no tracking, no internet needed, open-source code. \
+        No tracking. Internet is needed only to download models. Open-source code. \
         Made to keep 100% of your data on your device.
         """
       )
