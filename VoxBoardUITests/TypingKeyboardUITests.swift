@@ -34,6 +34,30 @@ final class TypingKeyboardUITests: XCTestCase {
     self.chooseLanguage("en", in: app)
   }
 
+  func testSwipeTypesAWord() throws {
+    self.continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launch()
+    self.openPreview(in: app)
+    self.chooseLanguage("en", in: app)
+    let text = app.staticTexts["keyboard.preview.text"]
+    let before = text.label
+    let start = app.buttons["typing.key.t"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+    let end = app.buttons["typing.key.o"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+    start.press(forDuration: 0.05, thenDragTo: end, withVelocity: 600, thenHoldForDuration: 0.05)
+    let typed = NSPredicate(format: "label != %@", before)
+    expectation(for: typed, evaluatedWith: text)
+    waitForExpectations(timeout: 5)
+    XCTAssertTrue(text.label.lowercased().hasSuffix("to"), text.label)
+    let attachment = XCTAttachment(screenshot: app.screenshot())
+    attachment.name = "Swipe typing"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    // Delete right after a swipe removes the whole word.
+    app.buttons["typing.delete"].tap()
+    XCTAssertEqual(text.label, before)
+  }
+
   func testOneHandedModeShrinksKeysToEitherSide() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()

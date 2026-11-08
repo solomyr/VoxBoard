@@ -109,6 +109,50 @@ final class TypingKeyboardModel: ObservableObject {
   }
   private let defaults: UserDefaults
 
+  // MARK: Swipe typing
+
+  /// Other likely words for the last swiped word; tapping one replaces it.
+  @Published var swipeSuggestions: [String] = []
+  /// The last word a swipe inserted, while it can still be replaced or deleted as a whole.
+  @Published var lastSwipeWord: String?
+  /// Text before the cursor, as last reported by the text field.
+  private(set) var contextBefore: String?
+
+  /// Applies the current shift state to a swiped word and uses up a one-shot shift.
+  func casedSwipeWord(_ word: String) -> String {
+    let result: String
+    switch self.shift {
+    case .off: result = word
+    case .once: result = word.prefix(1).uppercased(with: self.language.locale) + word.dropFirst()
+    case .locked: result = word.uppercased(with: self.language.locale)
+    }
+    if self.shift == .once { self.shift = .off }
+    self.lastShiftTap = nil
+    return result
+  }
+
+  /// Matches a replacement word to the case of the word it replaces.
+  func matchCase(_ word: String, to original: String) -> String {
+    if original.count > 1, original == original.uppercased(with: self.language.locale) {
+      return word.uppercased(with: self.language.locale)
+    }
+    if let first = original.first, first.isUppercase {
+      return word.prefix(1).uppercased(with: self.language.locale) + word.dropFirst()
+    }
+    return word
+  }
+
+  /// A swiped word starts with a space unless it follows a space, a line break, or an opening bracket.
+  var swipeNeedsLeadingSpace: Bool {
+    guard let last = self.contextBefore?.last else { return false }
+    return !(last.isWhitespace || "([{\"«„“‘¿¡".contains(last))
+  }
+
+  func clearSwipe() {
+    if !self.swipeSuggestions.isEmpty { self.swipeSuggestions = [] }
+    if self.lastSwipeWord != nil { self.lastSwipeWord = nil }
+  }
+
   @Published var language: KeyboardLanguage
   @Published var page = TypingPage.letters
   @Published private(set) var shift = TypingShift.once
@@ -144,6 +188,7 @@ final class TypingKeyboardModel: ObservableObject {
   }
 
   func updateContext(before: String?, capitalization: TypingCapitalization) {
+    self.contextBefore = before
     guard self.shift != .locked else { return }
     guard let before else { self.shift = .off; return }
     let upper: Bool
