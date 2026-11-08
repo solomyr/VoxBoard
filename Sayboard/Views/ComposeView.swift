@@ -260,9 +260,9 @@ struct ComposeView: View {
   private var keyboardCard: some View {
     VStack(alignment: .leading, spacing: 12) {
       Label("Dictate from your keyboard", systemImage: "keyboard").font(.headline)
-      Text("Tap the small microphone to start. VoxBoard opens briefly to turn on the mic and returns you to your typing app. Tap again to stop, prepare the text, and insert it. The microphone turns off as soon as recording stops.")
+      Text("Tap the keyboard microphone to start and tap again to finish, or hold it while you speak. The first recording opens VoxBoard briefly to turn the microphone on; after that you record right in the keyboard, and your text is prepared and inserted for you.")
         .font(.footnote).foregroundStyle(.secondary)
-      Text("No background session to enable. Nothing listens between recordings.")
+      Text("Nothing is recorded until you tap the mic. Turn the microphone off from the keyboard or in Settings.")
         .font(.footnote.weight(.medium))
       Button("Keyboard setup") {
         if let url = URL(string: UIApplication.openSettingsURLString) { self.openURL(url) }
