@@ -4,7 +4,7 @@ import SwiftUI
 struct VoxBoardWatchApp: App {
   var body: some Scene {
     WindowGroup {
-      DictationView()
+      NavigationStack { DictationView() }
     }
   }
 }
