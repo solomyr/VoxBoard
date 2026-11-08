@@ -1,16 +1,24 @@
 import SwiftUI
+import UIKit
 
 struct StandardKeyboardLayout: View {
   let proxy: KeyboardProxy
   @ObservedObject var keyboardState: KeyboardState
   @State private var notice: LocalizedStringKey?
-  @State private var tapCount = 0
+  /// A light tap like the system keyboard's. Needs Full Access; iOS ignores it otherwise.
+  @State private var keyHaptic = UIImpactFeedbackGenerator(style: .light)
   /// What the current finger-down on the mic did, from touch-down to lift.
   private enum MicPress { case none, started(Date), stopped, deferredToTap, ignored }
   @State private var micPress = MicPress.none
 
   /// Holding the mic at least this long records push-to-talk: letting go stops it.
   private static let holdToTalkThreshold: TimeInterval = 0.4
+
+  private func keyPressHaptic() {
+    guard self.keyboardState.keyboardHapticsEnabled else { return }
+    self.keyHaptic.impactOccurred(intensity: 0.7)
+    self.keyHaptic.prepare()
+  }
 
   private var isHoldingMic: Bool {
     if case .started = self.micPress { return true }
@@ -33,16 +41,16 @@ struct StandardKeyboardLayout: View {
         scale: KeyboardMetrics.scale,
         inputDisabled: self.busy || self.keyboardState.isRecording,
         returnLabel: self.keyboardState.returnKeyLabel,
-        onInsert: { self.tapCount &+= 1; self.proxy.insertText($0) },
-        onSpace: { self.tapCount &+= 1; self.proxy.insertSpace() },
+        onInsert: { self.proxy.insertText($0) },
+        onSpace: { self.proxy.insertSpace() },
         onDelete: { self.proxy.deleteBackward() },
         onMoveCursor: self.proxy.adjustTextPosition,
         onLanguageChange: self.keyboardState.selectTypingLanguage,
+        onKeyPress: self.keyPressHaptic,
         toolbar: { self.toolbar },
         globe: { GlobeKey(fixedWidth: 36.kbScaled) },
       )
     }
-    .gatedSensoryFeedback(.selection, trigger: self.tapCount)
     .onAppear { self.proxy.setActionBarVisible(false) }
     .onChange(of: self.keyboardState.isRecording) { _, recording in
       if recording { self.notice = nil }
@@ -145,6 +153,7 @@ struct StandardKeyboardLayout: View {
 
   private func micPressBegan() {
     guard case .none = self.micPress else { return }
+    if !self.micDisabled { self.keyPressHaptic() }
     if self.micDisabled {
       self.micPress = .ignored
     } else if self.keyboardState.isRecording {
@@ -166,6 +175,7 @@ struct StandardKeyboardLayout: View {
     case .started(let start):
       // Held long enough: push-to-talk, so letting go finishes the recording.
       if Date().timeIntervalSince(start) >= Self.holdToTalkThreshold {
+        self.keyPressHaptic()
         self.proxy.stopDictation()
       }
     case .deferredToTap:

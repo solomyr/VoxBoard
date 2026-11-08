@@ -11,6 +11,8 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   let onDelete: () -> Void
   let onMoveCursor: (Int) -> Void
   let onLanguageChange: (KeyboardLanguage) -> Void
+  /// Called on every key press (letters, space, delete, shift, return…), e.g. for haptics.
+  var onKeyPress: () -> Void = {}
   @ViewBuilder let toolbar: () -> Toolbar
   @ViewBuilder let globe: () -> Globe
   @State private var showsLanguages = false
@@ -50,6 +52,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
             .padding(.horizontal, self.model.language == .english && self.model.page == .letters ? 14 * self.scale : 0)
           HStack(spacing: 5 * self.scale) {
             Button {
+              self.onKeyPress()
               if self.model.page == .letters { self.model.tapShift() }
               else { self.model.page = self.model.page == .numbers ? .symbols : .numbers }
             } label: {
@@ -63,11 +66,15 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
             .accessibilityValue(self.model.shift == .locked ? "Caps Lock" : self.model.shift == .once ? "Uppercase" : "Lowercase")
             .accessibilityIdentifier("typing.shift")
             self.characterRow(self.model.rows[2])
-            RepeatingDeleteKey(height: 44 * self.scale, action: self.onDelete)
+            RepeatingDeleteKey(height: 44 * self.scale) {
+              self.onKeyPress()
+              self.onDelete()
+            }
               .frame(width: 37 * self.scale)
           }
           HStack(spacing: 5 * self.scale) {
             Button(self.model.page == .letters ? "123" : "ABC") {
+              self.onKeyPress()
               self.model.page = self.model.page == .letters ? .numbers : .letters
             }
             .font(.system(size: 15 * self.scale))
@@ -77,10 +84,14 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
             self.globe().frame(width: 36 * self.scale, height: 44 * self.scale)
             self.characterKey(",")
               .frame(width: 26 * self.scale)
-            TypingSpaceKey(height: 44 * self.scale, onSpace: self.onSpace, onMoveCursor: self.onMoveCursor)
+            TypingSpaceKey(
+              height: 44 * self.scale,
+              onSpace: { self.onKeyPress(); self.onSpace() },
+              onMoveCursor: { self.onKeyPress(); self.onMoveCursor($0) },
+            )
             self.characterKey(".")
               .frame(width: 26 * self.scale)
-            Button { self.onInsert("\n") } label: {
+            Button { self.onKeyPress(); self.onInsert("\n") } label: {
               Text(verbatim: self.returnLabel).font(.system(size: 14 * self.scale))
                 .lineLimit(1).minimumScaleFactor(0.7)
             }
@@ -130,6 +141,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
 
   private func oneHandedOption(_ mode: OneHandedMode, symbol: String, label: LocalizedStringKey) -> some View {
     Button {
+      self.onKeyPress()
       self.model.oneHanded = mode
       self.showsLanguages = false
     } label: {
@@ -187,6 +199,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     HStack(spacing: 5 * self.scale) {
       ForEach([key] + self.model.language.alternatives(for: key), id: \.self) { variant in
         Button(self.model.displayed(variant)) {
+          self.onKeyPress()
           self.onInsert(self.model.consume(variant))
           self.accentKey = nil
         }
@@ -210,11 +223,11 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     let alternatives = self.model.page == .letters ? self.model.language.alternatives(for: key) : []
     Group {
       if alternatives.isEmpty {
-        Button { self.onInsert(self.model.consume(key)) } label: {
+        Button { self.onKeyPress(); self.onInsert(self.model.consume(key)) } label: {
           Text(verbatim: self.model.displayed(key))
         }
       } else {
-        Button { self.onInsert(self.model.consume(key)) } label: {
+        Button { self.onKeyPress(); self.onInsert(self.model.consume(key)) } label: {
           Text(verbatim: self.model.displayed(key))
         }
         .highPriorityGesture(LongPressGesture(minimumDuration: 0.4).onEnded { _ in self.accentKey = key })
