@@ -101,7 +101,7 @@ struct StandardKeyboardLayout: View {
       }
       #if VOXBOARD_INTENT_PROBE
       if #available(iOS 27.0, *) { KeyboardBackgroundProbeButton() }
-      KeyboardMicProbeButton()
+      KeyboardContextModelProbeButton()
       #endif
       if self.keyboardState.showsAIButton {
         Button {

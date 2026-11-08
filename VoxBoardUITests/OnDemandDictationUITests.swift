@@ -41,6 +41,22 @@ final class OnDemandDictationUITests: XCTestCase {
     print("MICPROBE RESULT: \(probe.value as? String ?? "nil") hostState=\(host.state.rawValue)")
   }
 
+  func testKeyboardContextModelProbe() throws {
+    self.continueAfterFailure = false
+    let host = XCUIApplication(bundleIdentifier: "dev.voxboard.keyboardfixture")
+    host.launch()
+    defer { host.terminate() }
+    XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
+    host.textViews["fixture.text"].tap()
+    self.selectVoxBoard(in: host)
+    let probe = host.buttons["typing.contextProbe"]
+    XCTAssertTrue(probe.waitForExistence(timeout: 5))
+    probe.tap()
+    expectation(for: NSPredicate(format: "NOT (value IN %@)", ["idle", "running"]), evaluatedWith: probe)
+    waitForExpectations(timeout: 30)
+    print("CONTEXTPROBE RESULT: \(probe.value as? String ?? "nil")")
+  }
+
   func testKeyboardHandsOffOnceThenRecordsInPlace() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()

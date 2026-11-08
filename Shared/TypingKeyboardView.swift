@@ -22,6 +22,10 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   @State private var isSwiping = false
   @State private var swipeEndedAt = Date.distantPast
   @State private var lexicon: SwipeLexicon?
+  @State private var personalLexicon: SwipeLexicon?
+  /// The word before the last swiped word, for learning which word follows which.
+  @State private var swipePrevious: String?
+  @State private var contextRankTask: Task<Void, Never>?
 
   var body: some View {
     VStack(spacing: 6 * self.scale) {
@@ -40,6 +44,16 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
         .accessibilityLabel("Keyboard language")
         .accessibilityValue(self.model.language.name)
         .accessibilityIdentifier("typing.languages")
+        Button {
+          self.pressKey()
+          self.model.oneHanded = self.model.oneHanded == .off ? .right : .off
+        } label: {
+          Image(systemName: self.model.oneHanded == .off ? "keyboard.onehanded.right" : "keyboard")
+            .frame(minWidth: 36, minHeight: 44 * self.scale)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(self.model.oneHanded == .off ? "One-handed keyboard" : "Full width keyboard")
+        .accessibilityIdentifier("typing.oneHanded.toggle")
         if self.model.swipeSuggestions.isEmpty {
           self.toolbar()
         } else {
@@ -92,7 +106,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
               .frame(width: 26 * self.scale)
             TypingSpaceKey(
               height: 44 * self.scale,
-              onSpace: { self.pressKey(); self.onSpace() },
+              onSpace: { self.learnTypedWord(); self.pressKey(); self.onSpace() },
               onMoveCursor: { self.pressKey(); self.onMoveCursor($0) },
             )
             self.characterKey(".")
@@ -123,7 +137,9 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
       self.model.clearSwipe()
       let language = self.model.language
       self.lexicon = nil
-      self.lexicon = await Task.detached(priority: .utility) { SwipeLexicon.load(language) }.value
+      let lexicon = await Task.detached(priority: .utility) { SwipeLexicon.load(language) }.value
+      self.lexicon = lexicon
+      self.refreshPersonalLexicon()
     }
   }
 
@@ -145,11 +161,29 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   private func deleteKey() {
     self.onKeyPress()
     if let word = self.model.lastSwipeWord {
+      // Deleting a swiped word right away means it was the wrong word.
+      SwipeMemory.shared.learn(word, after: self.swipePrevious, language: self.model.language, weight: -1)
+      self.contextRankTask?.cancel()
       for _ in word { self.onDelete() }
       self.model.clearSwipe()
     } else {
       self.onDelete()
     }
+  }
+
+  /// A word finished with the space bar is remembered, so names and slang become swipeable.
+  private func learnTypedWord() {
+    guard self.model.lastSwipeWord == nil, let context = self.model.contextBefore, context.last?.isLetter == true else { return }
+    let words = context.split(whereSeparator: { !$0.isLetter })
+    guard let word = words.last else { return }
+    let previous = words.count > 1 ? String(words[words.count - 2]).lowercased(with: self.model.language.locale) : nil
+    SwipeMemory.shared.learn(String(word), after: previous, language: self.model.language)
+  }
+
+  private func refreshPersonalLexicon() {
+    guard let lexicon = self.lexicon else { return }
+    let extra = SwipeMemory.shared.extraWords(language: self.model.language, excluding: lexicon)
+    self.personalLexicon = extra.isEmpty ? nil : SwipeLexicon(language: self.model.language, words: extra, rankOffset: 500)
   }
 
   // MARK: Swipe typing
@@ -201,13 +235,48 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     for (key, frame) in letters {
       if let character = key.first { centers[character] = CGPoint(x: frame.midX, y: frame.midY) }
     }
-    let candidates = SwipeDecoder(keyCenters: centers, keySize: size).candidates(for: path, in: lexicon)
+    let language = self.model.language
+    let previous = SwipeMemory.previousWord(in: self.model.contextBefore, locale: language.locale)
+    let memory = SwipeMemory.shared
+    let boost: (String) -> CGFloat = { memory.boost($0, after: previous, language: language) }
+    let decoder = SwipeDecoder(keyCenters: centers, keySize: size)
+    var scored = decoder.scored(for: path, in: lexicon, boost: boost)
+    if let personal = self.personalLexicon {
+      scored += decoder.scored(for: path, in: personal, boost: boost)
+      scored.sort { $0.cost < $1.cost }
+    }
+    var seen = Set<String>()
+    let ranked = scored.filter { seen.insert($0.word).inserted }.prefix(4)
+    let candidates = ranked.map(\.word)
     guard let best = candidates.first else { return }
     self.onKeyPress()
+    let needsSpace = self.model.swipeNeedsLeadingSpace
     let word = self.model.casedSwipeWord(best)
-    self.onInsert((self.model.swipeNeedsLeadingSpace ? " " : "") + word)
+    self.onInsert((needsSpace ? " " : "") + word)
     self.model.lastSwipeWord = word
     self.model.swipeSuggestions = candidates.dropFirst().map { self.model.matchCase($0, to: word) }
+    self.swipePrevious = previous
+    memory.learn(best, after: previous, language: language)
+    self.askContextModel(ranked: Array(ranked), inserted: word, previous: previous)
+  }
+
+  /// When the top words are close, let the on-device AI model pick using the
+  /// sentence so far; if it prefers another word, swap it in (unless you have moved on).
+  private func askContextModel(ranked: [(word: String, cost: CGFloat)], inserted: String, previous: String?) {
+    self.contextRankTask?.cancel()
+    guard ranked.count > 1, let context = self.model.contextBefore, !context.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+    let close = ranked.filter { $0.cost - ranked[0].cost < 0.6 }.map(\.word)
+    guard close.count > 1 else { return }
+    let language = self.model.language
+    let before = String(context.dropLast(inserted.count))
+    self.contextRankTask = Task { @MainActor in
+      guard
+        let choice = await SwipeContextRanker.choose(context: before, candidates: close, language: language),
+        !Task.isCancelled, self.model.lastSwipeWord == inserted,
+        choice.lowercased(with: language.locale) != inserted.lowercased(with: language.locale)
+      else { return }
+      self.replaceSwipedWord(with: self.model.matchCase(choice, to: inserted), learn: false)
+    }
   }
 
   private var swipeSuggestionBar: some View {
@@ -228,12 +297,19 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     .frame(maxWidth: .infinity)
   }
 
-  private func replaceSwipedWord(with suggestion: String) {
+  private func replaceSwipedWord(with suggestion: String, learn: Bool = true) {
     guard let current = self.model.lastSwipeWord else { return }
-    self.onKeyPress()
+    if learn {
+      self.contextRankTask?.cancel()
+      self.onKeyPress()
+      SwipeMemory.shared.learn(suggestion, after: self.swipePrevious, language: self.model.language, weight: 3)
+      SwipeMemory.shared.learn(current, after: self.swipePrevious, language: self.model.language, weight: -2)
+    }
     for _ in current { self.onDelete() }
     self.onInsert(suggestion)
-    self.model.swipeSuggestions = self.model.swipeSuggestions.map { $0 == suggestion ? current : $0 }
+    var suggestions = self.model.swipeSuggestions.filter { $0 != suggestion }
+    suggestions.insert(current, at: 0)
+    self.model.swipeSuggestions = Array(suggestions.prefix(3))
     self.model.lastSwipeWord = suggestion
   }
 

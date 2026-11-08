@@ -61,4 +61,54 @@ struct SwipeTypingTests {
     #expect(!model.swipeNeedsLeadingSpace)
     #expect(model.matchCase("help", to: "Hello") == "Help")
   }
+
+  @Test
+  func `sloppy swipes of common words are decoded accurately`() throws {
+    let language = KeyboardLanguage.english
+    let lexicon = try #require(SwipeLexicon.load(language))
+    let centers = Self.centers(language)
+    let size = CGSize(width: 390 / CGFloat(language.rows[0].count), height: 46)
+    let decoder = SwipeDecoder(keyCenters: centers, keySize: size)
+    let entries = lexicon.entriesByFirstKey.values.flatMap { $0 }.filter { $0.rank < 2000 }.sorted { $0.rank < $1.rank }
+    var seed: UInt64 = 42
+    func noise() -> CGFloat {
+      seed = seed &* 6364136223846793005 &+ 1442695040888963407
+      return CGFloat(Int64(bitPattern: seed >> 11) % 1000) / 1000 * 0.3
+    }
+    var hits = 0
+    for entry in entries.prefix(300) {
+      let path = entry.keys.compactMap { centers[$0] }.map { CGPoint(x: $0.x + noise() * size.width, y: $0.y + noise() * size.height) }
+      if decoder.candidates(for: path, in: lexicon).first == entry.word { hits += 1 }
+    }
+    #expect(hits >= 270, "\(hits)/300")
+  }
+
+  @Test
+  func `words you use after a word win the same swipe next time`() throws {
+    let defaults = try #require(UserDefaults(suiteName: "swipe-memory-tests"))
+    defaults.removePersistentDomain(forName: "swipe-memory-tests")
+    let memory = SwipeMemory(defaults: defaults)
+    #expect(memory.boost("hey", after: "oh", language: .english) == 0)
+    memory.learn("hey", after: "oh", language: .english, weight: 3)
+    #expect(memory.boost("hey", after: "oh", language: .english) > memory.boost("hey", after: "the", language: .english))
+    #expect(memory.boost("hey", after: "the", language: .english) > 0)
+    #expect(SwipeMemory.previousWord(in: "Oh ", locale: Locale(identifier: "en")) == "oh")
+    #expect(SwipeMemory.previousWord(in: "Done. ", locale: Locale(identifier: "en")) == nil)
+  }
+
+  @Test(arguments: [
+    ("Could you please pass me the", ["sale", "salt"], "salt"),
+    ("Could you please pass me the", ["salt", "sale"], "salt"),
+    ("I agree with the", ["tens", "terms"], "terms"),
+    ("See you", ["tomorrow", "tomorrows", "tomato"], "tomorrow"),
+    ("Thank you so", ["much", "mich", "mud"], "much"),
+  ])
+  func `the on-device model picks the word that fits the sentence when available`(context: String, options: [String], expected: String) async {
+    guard let choice = await SwipeContextRanker.choose(context: context, candidates: options, language: .english) else {
+      print("SWIPE CONTEXT MODEL: unavailable")
+      return
+    }
+    print("SWIPE CONTEXT MODEL: \(context) \(options) -> \(choice)")
+    #expect(choice == expected)
+  }
 }

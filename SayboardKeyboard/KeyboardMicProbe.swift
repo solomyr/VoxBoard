@@ -61,3 +61,24 @@ struct KeyboardMicProbeButton: View {
   }
 }
 #endif
+
+#if VOXBOARD_INTENT_PROBE
+/// Debug-only probe: can the keyboard extension use Apple's on-device model?
+struct KeyboardContextModelProbeButton: View {
+  @State private var result = "idle"
+
+  var body: some View {
+    Button {
+      self.result = "running"
+      Task { @MainActor in
+        let start = Date()
+        let choice = await SwipeContextRanker.choose(context: "Could you please pass me the", candidates: ["sale", "salt"], language: .english)
+        self.result = "\(choice ?? "unavailable") \(Int(Date().timeIntervalSince(start) * 1000))ms"
+      }
+    } label: { Image(systemName: "brain").frame(width: 32, height: 44) }
+      .accessibilityLabel("Context model probe")
+      .accessibilityValue(self.result)
+      .accessibilityIdentifier("typing.contextProbe")
+  }
+}
+#endif
