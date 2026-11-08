@@ -52,7 +52,7 @@ enum KeyboardLanguage: String, CaseIterable, Identifiable, Sendable {
   var rows: [[String]] {
     let rows: [String] = switch self {
     case .english, .italian, .portuguese: ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
-    case .bulgarianPhonetic: ["явертъуиопч", "асдфгхйклшщ", "зьцжбнмю"]
+    case .bulgarianPhonetic: ["явертъуиопю", "асдфгхйклшщ", "зьцжбнмч"]
     case .bulgarianBDS: ["уеишщксдзцб", "ьяаожгтнвмч", "юйъэфхпрл"]
     case .german: ["qwertzuiopü", "asdfghjklöä", "yxcvbnm"]
     case .french: ["azertyuiop", "qsdfghjklm", "wxcvbn"]

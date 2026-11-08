@@ -15,6 +15,8 @@ struct TypingKeyboardTests {
       #expect(language.alternatives(for: "и").contains("ѝ"))
     }
     #expect(KeyboardLanguage.bulgarianPhonetic.rows[0].prefix(6).joined() == "явертъ")
+    // Same rows as Gboard's Bulgarian phonetic keyboard.
+    #expect(KeyboardLanguage.bulgarianPhonetic.rows.map { $0.joined() } == ["явертъуиопю", "асдфгхйклшщ", "зьцжбнмч"])
     #expect(KeyboardLanguage.bulgarianBDS.rows[0].prefix(6).joined() == "уеишщк")
   }
 
