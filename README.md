@@ -102,4 +102,4 @@ Regenerate the icon with `swift scripts/generate-icon.swift Sayboard/Assets.xcas
 
 Forked from AltBoard commit `f4e77949cb891f26cf234a0a074d78d14a3450dd`. Original documentation is in `docs/UPSTREAM.md`. Copyright/license notices are preserved. VoxBoard is independent, not an official AltBoard release.
 
-GNU GPL v3; see [LICENSE](LICENSE). Preserve notices and provide corresponding source as required when distributing a derivative build. Review dependency/model licenses and distribution-channel terms before release.
+GNU GPL v3; see [LICENSE](LICENSE). VoxBoard is a fork of [AltBoard](https://github.com/Altboard/Altboard) (Copyright (c) 2025 Altboard, GPL v3); the complete corresponding source of every VoxBoard release is this repository, [github.com/solomyr/VoxBoard](https://github.com/solomyr/VoxBoard). Speech and text models are third-party works under their own licenses, listed at [huggingface.co/devoar/voxboard-models](https://huggingface.co/devoar/voxboard-models). Swipe-typing word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0.

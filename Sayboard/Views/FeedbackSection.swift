@@ -3,9 +3,15 @@ import SwiftUI
 struct FeedbackSection: View {
   var body: some View {
     Section {
-      Text("VoxBoard is an independent open-source fork of AltBoard.")
+      Text("VoxBoard is free software under the GNU GPL v3, built on the open-source AltBoard.")
+      if let url = SupportLinks.sourceURL {
+        Link("VoxBoard source code", destination: url)
+      }
       if let url = SupportLinks.upstreamURL {
-        Link("Upstream source and license", destination: url)
+        Link("AltBoard (upstream project)", destination: url)
+      }
+      if let url = SupportLinks.modelsURL {
+        Link("Model downloads and licenses", destination: url)
       }
     } header: {
       Text("Open Source")
