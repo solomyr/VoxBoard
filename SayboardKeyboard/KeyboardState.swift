@@ -64,6 +64,8 @@ final class KeyboardState: ObservableObject {
   }
 
   func clearLLMHistory() {
+    // Called on every key press: publishing unchanged values would redraw the whole keyboard each time.
+    guard !self.llmTextHistory.isEmpty || self.llmHistoryIndex != -1 || !self.llmHistorySuffix.isEmpty else { return }
     self.llmTextHistory = []
     self.llmHistoryIndex = -1
     self.llmHistorySuffix = ""

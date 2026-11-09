@@ -65,7 +65,7 @@ final class SwipeLexicon: @unchecked Sendable {
 /// Candidates must start near the first touch, end near the last, and visit
 /// every letter's key in order; survivors are ranked by how closely the
 /// path follows the word's ideal key-to-key shape, plus word frequency.
-struct SwipeDecoder {
+struct SwipeDecoder: Sendable {
   /// Centers of the layout's letter keys, in the same coordinates as the path.
   let keyCenters: [Character: CGPoint]
   let keySize: CGSize
@@ -209,10 +209,24 @@ final class SwipeMemory {
 
   /// Cost reduction for a candidate: more for words you use, most after the same previous word.
   func boost(_ word: String, after previous: String?, language: KeyboardLanguage) -> CGFloat {
+    self.snapshot(language: language).boost(word, after: previous)
+  }
+
+  /// A copy of what has been learned, safe to read off the main thread.
+  struct Snapshot: Sendable {
+    let words: [String: Int]
+    let pairs: [String: Int]
+
+    func boost(_ word: String, after previous: String?) -> CGFloat {
+      let single = CGFloat(self.words[word] ?? 0)
+      let pair = previous.map { CGFloat(self.pairs["\($0) \(word)"] ?? 0) } ?? 0
+      return 0.12 * log(1 + single) + 0.35 * log(1 + pair)
+    }
+  }
+
+  func snapshot(language: KeyboardLanguage) -> Snapshot {
     let store = self.store(for: language)
-    let single = CGFloat(store.words[word] ?? 0)
-    let pair = previous.map { CGFloat(store.pairs[Self.pairKey($0, word)] ?? 0) } ?? 0
-    return 0.12 * log(1 + single) + 0.35 * log(1 + pair)
+    return Snapshot(words: store.words, pairs: store.pairs)
   }
 
   func learn(_ word: String, after previous: String?, language: KeyboardLanguage, weight: Int = 1) {
@@ -224,8 +238,20 @@ final class SwipeMemory {
     if store.words[word, default: 0] <= 0 { store.words[word] = nil }
     store.trim()
     self.stores[SwipeLexicon.fileCode(for: language)] = store
-    self.save(store, language)
+    self.scheduleSave(language)
   }
+
+  /// Writing thousands of entries on every word would stall typing; save once things are quiet.
+  private func scheduleSave(_ language: KeyboardLanguage) {
+    self.pendingSave?.cancel()
+    self.pendingSave = Task { @MainActor [weak self] in
+      try? await Task.sleep(for: .seconds(2))
+      guard let self, !Task.isCancelled else { return }
+      self.save(self.store(for: language), language)
+    }
+  }
+
+  private var pendingSave: Task<Void, Never>?
 
   /// Words you have used at least twice that the bundled list lacks.
   func extraWords(language: KeyboardLanguage, excluding lexicon: SwipeLexicon) -> [String] {

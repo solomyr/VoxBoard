@@ -190,7 +190,7 @@ final class TypingKeyboardModel: ObservableObject {
   func updateContext(before: String?, capitalization: TypingCapitalization) {
     self.contextBefore = before
     guard self.shift != .locked else { return }
-    guard let before else { self.shift = .off; return }
+    guard let before else { if self.shift != .off { self.shift = .off }; return }
     let upper: Bool
     switch capitalization {
     case .none: upper = false
@@ -200,6 +200,7 @@ final class TypingKeyboardModel: ObservableObject {
       let trimmed = before.trimmingCharacters(in: .whitespaces)
       upper = trimmed.isEmpty || trimmed.last.map { ".!?\n".contains($0) } == true
     }
-    self.shift = upper ? .once : .off
+    let shift: TypingShift = upper ? .once : .off
+    if self.shift != shift { self.shift = shift }
   }
 }

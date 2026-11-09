@@ -58,6 +58,25 @@ final class TypingKeyboardUITests: XCTestCase {
     XCTAssertEqual(text.label, before)
   }
 
+  func testManySwipesInARowEachTypeAWord() throws {
+    self.continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launch()
+    self.openPreview(in: app)
+    self.chooseLanguage("en", in: app)
+    let text = app.staticTexts["keyboard.preview.text"]
+    for round in 1 ... 8 {
+      let before = text.label
+      let start = app.buttons["typing.key.t"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      let end = app.buttons["typing.key.o"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      start.press(forDuration: 0.05, thenDragTo: end, withVelocity: 600, thenHoldForDuration: 0.05)
+      let typed = NSPredicate(format: "label != %@", before)
+      expectation(for: typed, evaluatedWith: text)
+      waitForExpectations(timeout: 5)
+      XCTAssertGreaterThan(text.label.count, before.count, "Swipe \(round) typed nothing")
+    }
+  }
+
   func testOneHandedModeShrinksKeysToEitherSide() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()

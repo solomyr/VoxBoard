@@ -548,7 +548,7 @@ extension KeyboardViewController {
     @unknown default: .sentences
     }
     self.keyboardState.typing.updateContext(before: self.textDocumentProxy.documentContextBeforeInput, capitalization: capitalization)
-    self.keyboardState.returnKeyLabel = switch self.textDocumentProxy.returnKeyType ?? .default {
+    let returnLabel = switch self.textDocumentProxy.returnKeyType ?? .default {
     case .go: "go"
     case .search, .google, .yahoo: "search"
     case .send: "send"
@@ -557,6 +557,7 @@ extension KeyboardViewController {
     case .join: "join"
     default: "return"
     }
+    if self.keyboardState.returnKeyLabel != returnLabel { self.keyboardState.returnKeyLabel = returnLabel }
   }
 
   override func viewDidAppear(_ animated: Bool) {

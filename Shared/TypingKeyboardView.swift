@@ -17,10 +17,9 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   @ViewBuilder let globe: () -> Globe
   @State private var showsLanguages = false
   @State private var accentKey: String?
-  @State private var keyFrames: [String: CGRect] = [:]
-  @State private var swipePath: [CGPoint] = []
-  @State private var isSwiping = false
-  @State private var swipeEndedAt = Date.distantPast
+  /// Held, not observed: the finger path changes on every touch move, and only
+  /// the trail view redraws for it, not the whole keyboard.
+  @State private var swipe = SwipeTracker()
   @State private var lexicon: SwipeLexicon?
   @State private var personalLexicon: SwipeLexicon?
   /// The word before the last swiped word, for learning which word follows which.
@@ -152,7 +151,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
 
   private func tapCharacter(_ key: String) {
     // The touch that ends a swipe can also complete a tap on the key under it.
-    guard Date().timeIntervalSince(self.swipeEndedAt) > 0.3 else { return }
+    guard Date().timeIntervalSince(self.swipe.endedAt) > 0.3 else { return }
     self.pressKey()
     self.onInsert(self.model.consume(key))
   }
@@ -195,41 +194,40 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   private var swipeGesture: some Gesture {
     DragGesture(minimumDistance: 8, coordinateSpace: .named(typingKeySpace))
       .onChanged { value in
-        if self.isSwiping {
-          self.swipePath.append(value.location)
+        let tracker = self.swipe
+        // A new touch: if the previous drag was cancelled without ending, start over.
+        if value.startLocation != tracker.start {
+          tracker.reset()
+          tracker.start = value.startLocation
+        }
+        if tracker.isSwiping {
+          tracker.add(value.location)
           return
         }
         guard
           self.model.page == .letters, self.accentKey == nil, !self.inputDisabled, self.lexicon != nil,
-          let start = self.keyFrames.first(where: { self.letterKeys.contains($0.key) && $0.value.contains(value.startLocation) }),
+          let start = tracker.keyFrames.first(where: { self.letterKeys.contains($0.key) && $0.value.contains(value.startLocation) }),
           hypot(value.translation.width, value.translation.height) > start.value.width * 0.8
         else { return }
-        self.isSwiping = true
-        self.swipePath = [value.startLocation, value.location]
+        tracker.begin(at: value.startLocation, to: value.location)
       }
       .onEnded { _ in
-        guard self.isSwiping else { return }
-        self.isSwiping = false
-        self.swipeEndedAt = Date()
-        self.finishSwipe(self.swipePath)
-        withAnimation(.easeOut(duration: 0.2)) { self.swipePath = [] }
+        let tracker = self.swipe
+        defer { tracker.start = nil }
+        guard tracker.isSwiping else { return }
+        let path = tracker.path
+        tracker.finish()
+        self.finishSwipe(path)
       }
   }
 
   private var swipeTrail: some View {
-    Canvas { context, _ in
-      guard self.swipePath.count > 1 else { return }
-      var path = Path()
-      path.addLines(self.swipePath)
-      context.stroke(path, with: .color(.accentColor.opacity(0.55)),
-                     style: StrokeStyle(lineWidth: 7 * self.scale, lineCap: .round, lineJoin: .round))
-    }
-    .allowsHitTesting(false)
+    SwipeTrailView(tracker: self.swipe, lineWidth: 7 * self.scale).allowsHitTesting(false)
   }
 
   private func finishSwipe(_ path: [CGPoint]) {
     guard let lexicon = self.lexicon else { return }
-    let letters = self.keyFrames.filter { self.letterKeys.contains($0.key) }
+    let letters = self.swipe.keyFrames.filter { self.letterKeys.contains($0.key) }
     guard let size = letters.first?.value.size else { return }
     var centers: [Character: CGPoint] = [:]
     for (key, frame) in letters {
@@ -237,14 +235,27 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     }
     let language = self.model.language
     let previous = SwipeMemory.previousWord(in: self.model.contextBefore, locale: language.locale)
-    let memory = SwipeMemory.shared
-    let boost: (String) -> CGFloat = { memory.boost($0, after: previous, language: language) }
+    let snapshot = SwipeMemory.shared.snapshot(language: language)
+    let personal = self.personalLexicon
     let decoder = SwipeDecoder(keyCenters: centers, keySize: size)
-    var scored = decoder.scored(for: path, in: lexicon, boost: boost)
-    if let personal = self.personalLexicon {
-      scored += decoder.scored(for: path, in: personal, boost: boost)
-      scored.sort { $0.cost < $1.cost }
+    // Decode off the main thread so typing and the trail never stall.
+    Task {
+      let scored = await Task.detached(priority: .userInitiated) { () -> [(word: String, cost: CGFloat)] in
+        let boost: (String) -> CGFloat = { snapshot.boost($0, after: previous) }
+        var scored = decoder.scored(for: path, in: lexicon, boost: boost)
+        if let personal {
+          scored += decoder.scored(for: path, in: personal, boost: boost)
+          scored.sort { $0.cost < $1.cost }
+        }
+        return Array(scored.prefix(12))
+      }.value
+      self.insertSwipe(scored, previous: previous)
     }
+  }
+
+  private func insertSwipe(_ scored: [(word: String, cost: CGFloat)], previous: String?) {
+    let language = self.model.language
+    let memory = SwipeMemory.shared
     var seen = Set<String>()
     let ranked = scored.filter { seen.insert($0.word).inserted }.prefix(4)
     let candidates = ranked.map(\.word)
@@ -361,7 +372,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     let mode = self.model.oneHanded
     let keyStack = VStack(spacing: 6 * self.scale) { keys() }
       .coordinateSpace(.named(typingKeySpace))
-      .onPreferenceChange(TypingKeyFramesKey.self) { self.keyFrames = $0 }
+      .onPreferenceChange(TypingKeyFramesKey.self) { self.swipe.keyFrames = $0 }
       .simultaneousGesture(self.swipeGesture)
       .overlay { self.swipeTrail }
     if mode == .off {
@@ -560,3 +571,51 @@ private struct TypingKeyFramesKey: PreferenceKey {
 }
 
 private let typingKeySpace = "typingKeys"
+
+/// Finger path for the swipe trail. Only `SwipeTrailView` observes it.
+@MainActor
+final class SwipeTracker: ObservableObject {
+  @Published private(set) var path: [CGPoint] = []
+  private(set) var isSwiping = false
+  var start: CGPoint?
+  var endedAt = Date.distantPast
+  /// Letter key frames in the key area's coordinates; not published.
+  var keyFrames: [String: CGRect] = [:]
+
+  func begin(at start: CGPoint, to point: CGPoint) {
+    self.isSwiping = true
+    self.path = [start, point]
+  }
+
+  func add(_ point: CGPoint) {
+    // Skip points closer than 3 pt; the decoder resamples anyway.
+    if let last = self.path.last, hypot(point.x - last.x, point.y - last.y) < 3 { return }
+    self.path.append(point)
+  }
+
+  func finish() {
+    self.isSwiping = false
+    self.endedAt = Date()
+    withAnimation(.easeOut(duration: 0.2)) { self.path = [] }
+  }
+
+  func reset() {
+    self.isSwiping = false
+    if !self.path.isEmpty { self.path = [] }
+  }
+}
+
+private struct SwipeTrailView: View {
+  @ObservedObject var tracker: SwipeTracker
+  let lineWidth: CGFloat
+
+  var body: some View {
+    Canvas { context, _ in
+      guard self.tracker.path.count > 1 else { return }
+      var path = Path()
+      path.addLines(self.tracker.path)
+      context.stroke(path, with: .color(.accentColor.opacity(0.55)),
+                     style: StrokeStyle(lineWidth: self.lineWidth, lineCap: .round, lineJoin: .round))
+    }
+  }
+}
