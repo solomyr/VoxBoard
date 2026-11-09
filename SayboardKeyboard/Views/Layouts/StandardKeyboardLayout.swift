@@ -39,7 +39,8 @@ struct StandardKeyboardLayout: View {
       TypingKeyboardView(
         model: self.keyboardState.typing,
         scale: KeyboardMetrics.scale,
-        inputDisabled: self.busy || self.keyboardState.isRecording,
+        // Typing stays on while the AI polishes; if you edit, its result is discarded.
+        inputDisabled: self.keyboardState.isProcessing || self.keyboardState.isRecording,
         returnLabel: self.keyboardState.returnKeyLabel,
         onInsert: { self.proxy.insertText($0) },
         onSpace: { self.proxy.insertSpace() },

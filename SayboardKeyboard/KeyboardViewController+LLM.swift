@@ -15,6 +15,8 @@ extension KeyboardViewController {
       DispatchQueue.main.async {
         guard let vc = Self.activeInstance else { return }
         vc.keyboardState.isLLMProcessing = true
+        // Also VoxBoard's answer to a status ping while it polishes: it's alive, keep waiting.
+        vc.receivedPingDuringProcessing = true
       }
     }
 
@@ -127,6 +129,9 @@ extension KeyboardViewController {
       self.openURL(url)
     } else {
       TranscriptionBridge.postDarwinNotification(DarwinNotificationName.requestLLMProcessing)
+      // If VoxBoard doesn't answer (suspended, or busy with another request), give up
+      // instead of waiting forever with the keyboard stuck in "processing".
+      self.startProcessingTimeout()
     }
     DiagnosticLog.write("llm/kb: requested \(action.rawValue), text=\(inputText.count) chars")
   }

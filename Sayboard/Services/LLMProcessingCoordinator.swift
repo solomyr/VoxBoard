@@ -45,6 +45,16 @@ final class LLMProcessingCoordinator: ObservableObject {
   }
 
   func setupObservers() {
+    // Answer the keyboard's status ping while polishing, so it keeps waiting for the
+    // result instead of giving up (the mic session may be off during a polish).
+    self.statusObserver = TranscriptionBridge.observeDarwinNotification(
+      DarwinNotificationName.requestSessionStatus
+    ) { [weak self] in
+      Task { @MainActor [weak self] in
+        guard self?.isProcessing == true else { return }
+        TranscriptionBridge.postDarwinNotification(DarwinNotificationName.llmProcessingStarted)
+      }
+    }
     self.requestObserver = TranscriptionBridge.observeDarwinNotification(
       DarwinNotificationName.requestLLMProcessing
     ) { [weak self] in
@@ -69,6 +79,7 @@ final class LLMProcessingCoordinator: ObservableObject {
   private static let inferenceTimeoutSeconds: TimeInterval = 120
 
   private var requestObserver: DarwinNotificationObserver?
+  private var statusObserver: DarwinNotificationObserver?
 
   func handleProcessingRequest() async {
     guard !self.isProcessing else {

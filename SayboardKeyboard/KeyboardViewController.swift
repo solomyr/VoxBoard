@@ -78,6 +78,9 @@ final class KeyboardViewController: UIInputViewController {
     self.pingValidator.startIfNeeded(for: self.keyboardState)
     self.keyboardState.appearedAt = CFAbsoluteTimeGetCurrent()
     saveHostBundleId()
+    // A polish still marked as running (VoxBoard may have been suspended or killed
+    // mid-request) must not leave the keyboard waiting forever: check it's alive.
+    if self.keyboardState.isLLMProcessing { self.startProcessingTimeout() }
     self.keyboardState.syncOnboardingPractice(hostProcessID: self.hostProcess?.pid)
     self.hasDeferredAppearanceInsert = true
   }
