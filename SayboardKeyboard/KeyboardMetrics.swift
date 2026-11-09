@@ -8,7 +8,8 @@ enum KeyboardMetrics {
   static let baseExtendedHeight: CGFloat = 289.5
   static let baseActionBarExtra: CGFloat = 42
 
-  static let height: CGFloat = UIDevice.current.userInterfaceIdiom == .pad ? 293 : baseHeight
+  /// iPad keys match the size of Apple's and Gboard's iPad keyboards (about 60 pt tall).
+  static let height: CGFloat = UIDevice.current.userInterfaceIdiom == .pad ? 330 : baseHeight
 
   static let scale: CGFloat = height / baseHeight
 

@@ -113,7 +113,6 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     }
     .padding(.horizontal, 4 * self.scale)
     .padding(.vertical, 6 * self.scale)
-    .frame(maxWidth: 900)
     .frame(maxWidth: .infinity)
     .onChange(of: self.model.page) { _, _ in
       self.accentKey = nil
