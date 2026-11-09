@@ -107,7 +107,11 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
               .frame(width: 26 * self.scale)
             TypingSpaceKey(
               height: 44 * self.scale,
-              onSpace: { self.learnTypedWord(); self.pressKey(); self.onSpace() },
+              onSpace: {
+                // A swiped word already ends with a space, so space just confirms it.
+                if self.model.lastSwipeWord != nil { self.pressKey(); return }
+                self.learnTypedWord(); self.pressKey(); self.onSpace()
+              },
               onMoveCursor: { self.pressKey(); self.onMoveCursor($0) },
             )
             self.characterKey(".")
@@ -155,8 +159,15 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     // The touch that ends a swipe can also complete a tap on the key under it.
     guard Date().timeIntervalSince(self.swipe.endedAt) > 0.3,
           Date().timeIntervalSince(self.swipe.accentOpenedAt) > 0.6 else { return }
+    // Punctuation right after a swiped word goes before its space: "hello, ".
+    let attachesToWord = self.model.lastSwipeWord != nil && ",.!?;:".contains(key)
     self.pressKey()
-    self.onInsert(self.model.consume(key))
+    if attachesToWord {
+      self.onDelete()
+      self.onInsert(key + " ")
+    } else {
+      self.onInsert(self.model.consume(key))
+    }
   }
 
   /// Delete removes a just-swiped word in one go, like Gboard; otherwise one character.
@@ -166,7 +177,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
       // Deleting a swiped word right away means it was the wrong word.
       SwipeMemory.shared.learn(word, after: self.swipePrevious, language: self.model.language, weight: -1)
       self.contextRankTask?.cancel()
-      for _ in word { self.onDelete() }
+      for _ in 0 ..< word.count + 1 { self.onDelete() }
       self.model.clearSwipe()
     } else {
       self.onDelete()
@@ -267,7 +278,8 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     self.onKeyPress()
     let needsSpace = self.model.swipeNeedsLeadingSpace
     let word = self.model.casedSwipeWord(best)
-    self.onInsert((needsSpace ? " " : "") + word)
+    // Every swiped word ends with a space, like Gboard, so words never run together.
+    self.onInsert((needsSpace ? " " : "") + word + " ")
     self.model.lastSwipeWord = word
     self.model.swipeSuggestions = candidates.dropFirst().map { self.model.matchCase($0, to: word) }
     self.swipePrevious = previous
@@ -285,7 +297,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     guard close.count > 1, Date().timeIntervalSince(self.swipe.lastContextRequest) > 1.2 else { return }
     self.swipe.lastContextRequest = Date()
     let language = self.model.language
-    let before = String(context.dropLast(inserted.count))
+    let before = String(context.dropLast(inserted.count + 1))
     self.contextRankTask = Task { @MainActor in
       guard
         let choice = await SwipeContextRanker.choose(context: before, candidates: close, language: language),
@@ -322,8 +334,8 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
       SwipeMemory.shared.learn(suggestion, after: self.swipePrevious, language: self.model.language, weight: 3)
       SwipeMemory.shared.learn(current, after: self.swipePrevious, language: self.model.language, weight: -2)
     }
-    for _ in current { self.onDelete() }
-    self.onInsert(suggestion)
+    for _ in 0 ..< current.count + 1 { self.onDelete() }
+    self.onInsert(suggestion + " ")
     var suggestions = self.model.swipeSuggestions.filter { $0 != suggestion }
     suggestions.insert(current, at: 0)
     self.model.swipeSuggestions = Array(suggestions.prefix(3))

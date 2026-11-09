@@ -74,9 +74,12 @@ final class OnDemandDictationUITests: XCTestCase {
       let start = host.buttons["typing.key.\(from)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
       let end = host.buttons["typing.key.\(to)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
       start.press(forDuration: 0.05, thenDragTo: end, withVelocity: 300, thenHoldForDuration: 0.05)
-      sleep(2)
+      usleep(300_000)
       print("SWIPETEST after \(from)\(to): \(host.textViews["fixture.text"].value as? String ?? "nil") mic visible \(host.buttons["typing.microphone"].isHittable)")
     }
+    host.buttons.matching(identifier: "typing.key.,").firstMatch.tap()
+    sleep(1)
+    print("SWIPETEST final: '\(host.textViews["fixture.text"].value as? String ?? "nil")'")
     let attachment = XCTAttachment(screenshot: host.screenshot())
     attachment.lifetime = .keepAlways
     add(attachment)

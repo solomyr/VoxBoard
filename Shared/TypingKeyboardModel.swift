@@ -144,6 +144,8 @@ final class TypingKeyboardModel: ObservableObject {
 
   /// A swiped word starts with a space unless it follows a space, a line break, or an opening bracket.
   var swipeNeedsLeadingSpace: Bool {
+    // The last swiped word already ended with a space (the text field may not have caught up yet).
+    if self.lastSwipeWord != nil { return false }
     guard let last = self.contextBefore?.last else { return false }
     return !(last.isWhitespace || "([{\"«„“‘¿¡".contains(last))
   }

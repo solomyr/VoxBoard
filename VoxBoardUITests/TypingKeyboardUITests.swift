@@ -48,7 +48,7 @@ final class TypingKeyboardUITests: XCTestCase {
     let typed = NSPredicate(format: "label != %@", before)
     expectation(for: typed, evaluatedWith: text)
     waitForExpectations(timeout: 5)
-    XCTAssertTrue(text.label.lowercased().hasSuffix("to"), text.label)
+    XCTAssertTrue(text.label.lowercased().hasSuffix("to "), "Swiped words end with a space: '\(text.label)'")
     let attachment = XCTAttachment(screenshot: app.screenshot())
     attachment.name = "Swipe typing"
     attachment.lifetime = .keepAlways
