@@ -138,6 +138,47 @@ final class OnDemandDictationUITests: XCTestCase {
     print("RAPIDTEST steps: \(log)")
   }
 
+  /// Same typing-and-swiping workload on a given keyboard, for CPU comparison with xctrace.
+  func testBenchmarkWorkloadGboardThenVoxBoard() throws {
+    self.continueAfterFailure = true
+    let host = XCUIApplication(bundleIdentifier: "dev.voxboard.keyboardfixture")
+    host.launch()
+    defer { host.terminate() }
+    XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
+    // Bulgarian phonetic on both keyboards: VoxBoard now matches Gboard's rows.
+    let rows: [[String]] = ["явертъуиопю", "асдфгхйклшщ", "зьцжбнмч"].map { $0.map { String($0) } }
+    for keyboard in ["Gboard", "VoxBoard"] {
+      host.buttons["Clear test text"].tap()
+      host.textViews["fixture.text"].tap()
+      let marker = keyboard == "Gboard" ? host.keys["key_pos_1_1"] : host.buttons["typing.languages"]
+      for _ in 0 ..< 6 where !marker.waitForExistence(timeout: 2) {
+        let system = host.buttons.matching(NSPredicate(format: "label CONTAINS[cd] %@", "Next keyboard")).firstMatch
+        let globe = system.exists ? system : host.keys["key_pos_globe"]
+        if globe.exists { globe.tap() }
+      }
+      sleep(2)
+      if keyboard == "VoxBoard", host.buttons["typing.languages"].waitForExistence(timeout: 8) {
+        host.buttons["typing.languages"].tap()
+        if host.buttons["typing.language.bg-phonetic"].waitForExistence(timeout: 2) { host.buttons["typing.language.bg-phonetic"].tap() }
+      }
+      func key(_ r: Int, _ c: Int) -> XCUIElement {
+        keyboard == "Gboard" ? host.keys["key_pos_\(r + 1)_\(c + 1)"] : host.buttons["typing.key.\(rows[r][c])"]
+      }
+      if !key(1, 5).waitForExistence(timeout: 5) { print("BENCHTREE\n" + host.debugDescription) }
+      print("BENCH start \(keyboard) \(Date().timeIntervalSince1970)")
+      let start = Date()
+      for _ in 0 ..< 3 { for c: Int in [5, 1, 9, 9, 8, 3, 0, 10, 2, 6] { key(c % 2, c).tap() } }
+      let swipes: [((Int, Int), (Int, Int))] = [((0, 4), (0, 8)), ((0, 8), (2, 5)), ((0, 7), (1, 1)), ((0, 4), (0, 8)), ((0, 8), (2, 5)), ((0, 7), (1, 1))]
+      for (a, b) in swipes {
+        let from = key(a.0, a.1).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let to = key(b.0, b.1).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        from.press(forDuration: 0.03, thenDragTo: to, withVelocity: 600, thenHoldForDuration: 0.02)
+      }
+      print("BENCH end \(keyboard) \(Date().timeIntervalSince1970) took \(String(format: "%.1f", Date().timeIntervalSince(start)))s text '\(host.textViews["fixture.text"].value as? String ?? "")'")
+      sleep(3)
+    }
+  }
+
   func testKeyboardHandsOffOnceThenRecordsInPlace() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()
