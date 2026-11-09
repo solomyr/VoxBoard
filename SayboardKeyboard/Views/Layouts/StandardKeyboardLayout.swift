@@ -67,7 +67,7 @@ struct StandardKeyboardLayout: View {
           Text(message).font(.footnote).fixedSize(horizontal: false, vertical: true)
             .accessibilityIdentifier("typing.notice")
           Spacer(minLength: 0)
-          Button {
+          TouchButton {
             self.notice = nil
             self.keyboardState.llmError = nil
           } label: { Image(systemName: "xmark.circle.fill").frame(width: 32, height: 36) }
@@ -95,7 +95,7 @@ struct StandardKeyboardLayout: View {
         .accessibilityIdentifier("typing.status")
       Spacer(minLength: 0)
       if self.keyboardState.hasLLMHistory {
-        Button { self.proxy.undoLLM() } label: { Image(systemName: "arrow.uturn.backward") }
+        TouchButton { self.proxy.undoLLM() } label: { Image(systemName: "arrow.uturn.backward") }
           .disabled(!self.keyboardState.canUndoLLM || self.busy || self.keyboardState.isRecording)
           .accessibilityLabel("Undo cleanup")
       }
@@ -104,7 +104,7 @@ struct StandardKeyboardLayout: View {
       KeyboardContextModelProbeButton()
       #endif
       if self.keyboardState.showsAIButton {
-        Button {
+        TouchButton {
           self.proxy.requestLLMProcessing(.readyToSend, nil)
         } label: {
           Image(systemName: "sparkles").frame(minWidth: 32, minHeight: 44.kbScaled)
@@ -114,7 +114,7 @@ struct StandardKeyboardLayout: View {
         .accessibilityIdentifier("typing.polish")
       }
       if self.keyboardState.isSessionActive, !self.keyboardState.isRecording, !self.busy {
-        Button {
+        TouchButton {
           TranscriptionBridge.postDarwinNotification(DarwinNotificationName.requestEndSession)
         } label: {
           Image(systemName: "mic.slash").frame(minWidth: 32, minHeight: 44.kbScaled)

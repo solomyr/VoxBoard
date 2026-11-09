@@ -82,6 +82,45 @@ final class OnDemandDictationUITests: XCTestCase {
     add(attachment)
   }
 
+  func testOneHandedAndLanguageButtonsInInstalledKeyboard() throws {
+    self.continueAfterFailure = true
+    let host = XCUIApplication(bundleIdentifier: "dev.voxboard.keyboardfixture")
+    host.launch()
+    defer { host.terminate() }
+    XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
+    host.textViews["fixture.text"].tap()
+    self.selectVoxBoard(in: host)
+    let toggle = host.buttons["typing.oneHanded.toggle"]
+    print("BTNTEST toggle frame \(toggle.frame) hittable \(toggle.isHittable)")
+    toggle.tap()
+    let expand = host.buttons["typing.oneHanded.move"]
+    print("BTNTEST after toggle: expand exists \(expand.waitForExistence(timeout: 3)) frame \(expand.frame)")
+    let q1 = host.buttons["typing.key.q"].frame
+    host.buttons["typing.oneHanded.move"].tap(); sleep(1)
+    print("BTNTEST move: q before \(q1) after \(host.buttons["typing.key.q"].frame)")
+    let shot = XCTAttachment(screenshot: host.screenshot()); shot.lifetime = .keepAlways; add(shot)
+    expand.tap()
+    sleep(1)
+    print("BTNTEST after expand tap: expand exists \(expand.exists)")
+    if expand.exists {
+      toggle.tap(); sleep(1)
+      print("BTNTEST after toggle again: expand exists \(expand.exists)")
+    }
+    host.buttons["typing.languages"].tap()
+    if host.buttons["typing.oneHanded.left"].waitForExistence(timeout: 2) { host.buttons["typing.oneHanded.left"].tap() }
+    sleep(1)
+    print("BTNTEST left mode: expand \(expand.exists) frame \(expand.frame)")
+    expand.tap(); sleep(1)
+    print("BTNTEST right-strip expand tap: expand exists \(expand.exists)")
+    if expand.exists { host.buttons["typing.oneHanded.toggle"].tap(); sleep(1) }
+    let languages = host.buttons["typing.languages"]
+    print("BTNTEST languages frame \(languages.frame)")
+    languages.tap()
+    print("BTNTEST picker opened \(host.buttons["typing.language.en"].waitForExistence(timeout: 2))")
+    add(XCTAttachment(screenshot: host.screenshot()))
+    if host.buttons["typing.language.en"].exists { host.buttons["typing.language.en"].tap() }
+  }
+
   func testKeyboardHandsOffOnceThenRecordsInPlace() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()

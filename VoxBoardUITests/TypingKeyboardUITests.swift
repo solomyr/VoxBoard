@@ -113,14 +113,14 @@ final class TypingKeyboardUITests: XCTestCase {
     left.lifetime = .keepAlways
     add(left)
     app.buttons["typing.oneHanded.move"].tap()
-    XCTAssertGreaterThanOrEqual(app.buttons["typing.key.q"].frame.minX, app.buttons["typing.oneHanded.move"].frame.maxX)
+    XCTAssertGreaterThan(app.buttons["typing.key.q"].frame.minX, 40)
     app.buttons["typing.key.i"].tap()
     XCTAssertTrue(app.staticTexts["keyboard.preview.text"].label.hasSuffix("hi") || app.staticTexts["keyboard.preview.text"].label.hasSuffix("Hi"))
     let right = XCTAttachment(screenshot: app.screenshot())
     right.name = "One-handed right"
     right.lifetime = .keepAlways
     add(right)
-    app.buttons["typing.oneHanded.expand"].tap()
+    app.buttons["typing.oneHanded.toggle"].tap()
     XCTAssertFalse(app.buttons["typing.oneHanded.move"].exists)
     XCTAssertEqual(app.buttons["typing.key.p"].frame.maxX, fullWidth, accuracy: 1)
   }

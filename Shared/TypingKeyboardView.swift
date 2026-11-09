@@ -29,7 +29,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   var body: some View {
     VStack(spacing: 6 * self.scale) {
       HStack(spacing: 12) {
-        Button {
+        TouchButton {
           self.showsLanguages.toggle()
           self.accentKey = nil
         } label: {
@@ -43,7 +43,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
         .accessibilityLabel("Keyboard language")
         .accessibilityValue(self.model.language.name)
         .accessibilityIdentifier("typing.languages")
-        Button {
+        TouchButton {
           self.pressKey()
           self.model.oneHanded = self.model.oneHanded == .off ? .right : .off
         } label: {
@@ -53,6 +53,19 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
         }
         .accessibilityLabel(self.model.oneHanded == .off ? "One-handed keyboard" : "Full width keyboard")
         .accessibilityIdentifier("typing.oneHanded.toggle")
+        if self.model.oneHanded != .off {
+          // In the top row because buttons beside the keys get no touches inside the keyboard.
+          TouchButton {
+            self.pressKey()
+            self.model.oneHanded = self.model.oneHanded == .left ? .right : .left
+          } label: {
+            Image(systemName: self.model.oneHanded == .left ? "chevron.right" : "chevron.left")
+              .frame(minWidth: 32, minHeight: 44 * self.scale)
+              .contentShape(Rectangle())
+          }
+          .accessibilityLabel(self.model.oneHanded == .left ? "Move keyboard right" : "Move keyboard left")
+          .accessibilityIdentifier("typing.oneHanded.move")
+        }
         if self.model.swipeSuggestions.isEmpty {
           self.toolbar()
         } else {
@@ -297,7 +310,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   private var swipeSuggestionBar: some View {
     HStack(spacing: 4) {
       ForEach(self.model.swipeSuggestions, id: \.self) { suggestion in
-        Button {
+        TouchButton {
           self.replaceSwipedWord(with: suggestion)
         } label: {
           Text(verbatim: suggestion)
@@ -382,38 +395,16 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     if mode == .off {
       keyStack
     } else {
-      GeometryReader { geometry in
-        HStack(spacing: 0) {
-          if mode == .right { self.oneHandedControls(moveTo: .left) }
-          keyStack.frame(width: geometry.size.width * OneHandedMode.keyWidthFraction)
-          if mode == .left { self.oneHandedControls(moveTo: .right) }
-        }
-      }
-      .frame(height: (4 * 44 + 3 * 6) * self.scale)
+      // The free strip stays empty: buttons there received no touches inside the
+      // keyboard, so moving sides and expanding live in the top row.
+      let strip: CGFloat = 64 * self.scale
+      keyStack
+        .padding(mode == .right ? .leading : .trailing, strip)
+
     }
   }
 
-  private func oneHandedControls(moveTo side: OneHandedMode) -> some View {
-    VStack(spacing: 24 * self.scale) {
-      Button { self.model.oneHanded = .off } label: {
-        Image(systemName: "arrow.up.left.and.arrow.down.right")
-          .frame(maxWidth: .infinity, minHeight: 44 * self.scale)
-          .contentShape(Rectangle())
-      }
-      .accessibilityLabel("Full width keyboard")
-      .accessibilityIdentifier("typing.oneHanded.expand")
-      Button { self.model.oneHanded = side } label: {
-        Image(systemName: side == .left ? "chevron.left" : "chevron.right")
-          .frame(maxWidth: .infinity, minHeight: 44 * self.scale)
-          .contentShape(Rectangle())
-      }
-      .accessibilityLabel(side == .left ? "Move keyboard left" : "Move keyboard right")
-      .accessibilityIdentifier("typing.oneHanded.move")
-    }
-    .font(.system(size: 18 * self.scale, weight: .medium))
-    .foregroundStyle(.secondary)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-  }
+
 
   private func accentPicker(_ key: String) -> some View {
     HStack(spacing: 5 * self.scale) {
