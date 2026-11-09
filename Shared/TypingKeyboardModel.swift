@@ -45,6 +45,15 @@ enum KeyboardLanguage: String, CaseIterable, Identifiable, Sendable {
     }
   }
 
+  /// Shown on the space bar.
+  var spaceLabel: String {
+    switch self {
+    case .bulgarianPhonetic: "Български · Фонетична"
+    case .bulgarianBDS: "Български · БДС"
+    default: String(self.name.split(separator: " · ").first ?? Substring(self.name))
+    }
+  }
+
   var locale: Locale {
     Locale(identifier: self.rawValue.hasPrefix("bg-") ? "bg" : self.rawValue)
   }
@@ -156,6 +165,20 @@ final class TypingKeyboardModel: ObservableObject {
   }
 
   @Published var language: KeyboardLanguage
+
+  /// The language used before the current one: a flick on the space bar switches back to it.
+  var previousLanguage: KeyboardLanguage? {
+    self.defaults.string(forKey: Self.previousLanguageKey).flatMap(KeyboardLanguage.init(rawValue:))
+  }
+
+  private static let previousLanguageKey = "keyboardPreviousLanguage"
+
+  /// Switches layout and remembers the one you left, so the space bar can toggle between them.
+  func choose(_ language: KeyboardLanguage) {
+    if language != self.language { self.defaults.set(self.language.rawValue, forKey: Self.previousLanguageKey) }
+    self.language = language
+    self.page = .letters
+  }
   @Published var page = TypingPage.letters
   @Published private(set) var shift = TypingShift.once
   private var lastShiftTap: TimeInterval?

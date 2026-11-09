@@ -34,6 +34,30 @@ final class TypingKeyboardUITests: XCTestCase {
     self.chooseLanguage("en", in: app)
   }
 
+  func testSpaceBarFlickSwitchesBetweenTwoLanguages() throws {
+    self.continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launch()
+    self.openPreview(in: app)
+    self.chooseLanguage("en", in: app)
+    self.chooseLanguage("bg-phonetic", in: app)
+    let text = app.staticTexts["keyboard.preview.text"]
+    let before = text.label
+    let space = app.buttons["typing.space"]
+    func flick(_ dx: CGFloat) {
+      let start = space.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      start.press(forDuration: 0.01, thenDragTo: start.withOffset(CGVector(dx: dx, dy: 0)), withVelocity: 1500, thenHoldForDuration: 0)
+    }
+    flick(-120)
+    XCTAssertTrue(app.buttons["typing.key.q"].waitForExistence(timeout: 2), "Flick goes back to English")
+    flick(120)
+    XCTAssertTrue(app.buttons["typing.key.я"].waitForExistence(timeout: 2), "Flick returns to Bulgarian")
+    XCTAssertEqual(text.label, before, "A flick types nothing")
+    space.tap()
+    XCTAssertEqual(text.label, before + " ", "A tap still types a space")
+    self.chooseLanguage("en", in: app)
+  }
+
   func testSwipeTypesAWord() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()

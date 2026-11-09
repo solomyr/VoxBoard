@@ -94,6 +94,8 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
                 self.learnTypedWord(); self.pressKey(); self.onSpace()
               },
               onMoveCursor: { self.pressKey(); self.onMoveCursor($0) },
+              label: self.model.language.spaceLabel,
+              onFlick: { self.switchToPreviousLanguage() },
             )
             self.characterKey(".")
               .frame(width: 26 * self.scale)
@@ -129,6 +131,15 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   }
 
   // MARK: Keys
+
+  /// A quick flick on the space bar toggles between your two most recent languages.
+  private func switchToPreviousLanguage() {
+    guard let previous = self.model.previousLanguage, previous != self.model.language else { return }
+    self.pressKey()
+    self.accentKey = nil
+    self.model.choose(previous)
+    self.onLanguageChange(previous)
+  }
 
   private func pressKey() {
     self.onKeyPress()
@@ -331,8 +342,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5 * self.scale), count: 4), spacing: 6 * self.scale) {
       ForEach(KeyboardLanguage.allCases) { language in
         Button {
-          self.model.language = language
-          self.model.page = .letters
+          self.model.choose(language)
           self.showsLanguages = false
           self.onLanguageChange(language)
         } label: {
@@ -503,39 +513,65 @@ private struct RepeatingDeleteKey: View {
   }
 }
 
+/// Tap for a space; a quick flick left or right switches language; a slower drag
+/// (or one that keeps going) moves the cursor, like Gboard's space bar.
 private struct TypingSpaceKey: View {
   let height: CGFloat
   let onSpace: () -> Void
   let onMoveCursor: (Int) -> Void
+  var label = "space"
+  var onFlick: () -> Void = {}
   @State private var pressed = false
   @State private var lastOffset = 0
-  @State private var moved = false
+  @State private var downAt: Date?
+  @State private var cursorMode = false
   @Environment(\.isEnabled) private var enabled
 
+  /// A drag still going after this long is cursor movement, not a flick.
+  private static let flickTime: TimeInterval = 0.3
+  private static let flickDistance: CGFloat = 40
+
   var body: some View {
-    Text("space").font(.system(size: 15))
+    Text(verbatim: self.label).font(.system(size: 14)).foregroundStyle(.secondary)
+      .lineLimit(1).minimumScaleFactor(0.6).padding(.horizontal, 6)
       .frame(maxWidth: .infinity).frame(height: self.height)
       .background(TypingKeyFill(pressed: self.pressed))
       .contentShape(Rectangle())
       .gesture(DragGesture(minimumDistance: 0).onChanged { value in
         guard self.enabled else { return }
         self.pressed = true
+        let downAt = self.downAt ?? Date()
+        self.downAt = downAt
+        if !self.cursorMode, abs(value.translation.width) > 6, Date().timeIntervalSince(downAt) >= Self.flickTime {
+          self.cursorMode = true
+        }
+        guard self.cursorMode else { return }
+        // Cursor movement includes the distance dragged before cursor mode began.
         let offset = Int(value.translation.width / 12)
         if offset != self.lastOffset {
-          self.moved = true
           self.onMoveCursor(offset - self.lastOffset)
           self.lastOffset = offset
         }
-      }.onEnded { _ in
-        if self.enabled, !self.moved { self.onSpace() }
-        self.pressed = false
-        self.moved = false
-        self.lastOffset = 0
+      }.onEnded { value in
+        defer {
+          self.pressed = false
+          self.cursorMode = false
+          self.lastOffset = 0
+          self.downAt = nil
+        }
+        guard self.enabled, !self.cursorMode else { return }
+        if abs(value.translation.width) > Self.flickDistance {
+          self.onFlick()
+        } else {
+          self.onSpace()
+        }
       })
       .accessibilityLabel("Space")
+      .accessibilityValue(self.label)
       .accessibilityIdentifier("typing.space")
       .accessibilityAddTraits(.isButton)
       .accessibilityAction { self.onSpace() }
+      .accessibilityAction(named: "Switch language") { self.onFlick() }
   }
 }
 
