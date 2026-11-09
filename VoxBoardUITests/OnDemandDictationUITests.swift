@@ -57,6 +57,31 @@ final class OnDemandDictationUITests: XCTestCase {
     print("CONTEXTPROBE RESULT: \(probe.value as? String ?? "nil")")
   }
 
+  func testSwipeInInstalledKeyboard() throws {
+    self.continueAfterFailure = true
+    let host = XCUIApplication(bundleIdentifier: "dev.voxboard.keyboardfixture")
+    host.launch()
+    defer { host.terminate() }
+    XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
+    host.buttons["Clear test text"].tap()
+    host.textViews["fixture.text"].tap()
+    self.selectVoxBoard(in: host)
+    host.buttons["typing.languages"].tap()
+    host.buttons["typing.language.en"].tap()
+    host.buttons["typing.key.h"].tap()
+    print("SWIPETEST after tap: \(host.textViews["fixture.text"].value as? String ?? "nil")")
+    for (from, to) in [("t", "o"), ("o", "n"), ("i", "s")] {
+      let start = host.buttons["typing.key.\(from)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      let end = host.buttons["typing.key.\(to)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      start.press(forDuration: 0.05, thenDragTo: end, withVelocity: 300, thenHoldForDuration: 0.05)
+      sleep(2)
+      print("SWIPETEST after \(from)\(to): \(host.textViews["fixture.text"].value as? String ?? "nil")")
+    }
+    let attachment = XCTAttachment(screenshot: host.screenshot())
+    attachment.lifetime = .keepAlways
+    add(attachment)
+  }
+
   func testKeyboardHandsOffOnceThenRecordsInPlace() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()
