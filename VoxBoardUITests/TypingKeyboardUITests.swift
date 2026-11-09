@@ -77,6 +77,25 @@ final class TypingKeyboardUITests: XCTestCase {
     }
   }
 
+  /// Swipes that start on keys with accent menus (o, i, a) used to be swallowed.
+  func testBackToBackSwipesFromAccentKeys() throws {
+    self.continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launch()
+    self.openPreview(in: app)
+    self.chooseLanguage("en", in: app)
+    let text = app.staticTexts["keyboard.preview.text"]
+    for (from, to) in [("o", "n"), ("i", "s"), ("a", "s"), ("o", "n")] {
+      let before = text.label.count
+      let start = app.buttons["typing.key.\(from)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      let end = app.buttons["typing.key.\(to)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      start.press(forDuration: 0.01, thenDragTo: end, withVelocity: 800, thenHoldForDuration: 0.02)
+      let grew = NSPredicate { _, _ in MainActor.assumeIsolated { text.label.count > before } }
+      XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: grew, object: nil)], timeout: 4), .completed,
+                     "Swipe from \(from) typed nothing: \(text.label)")
+    }
+  }
+
   func testOneHandedModeShrinksKeysToEitherSide() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()

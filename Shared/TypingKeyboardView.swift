@@ -149,12 +149,11 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     self.model.clearSwipe()
   }
 
-  private func tapCharacter(_ key: String) {
-    // The touch that ends a swipe can also complete a tap on the key under it.
-    guard Date().timeIntervalSince(self.swipe.endedAt) > 0.3 else { return }
-    self.pressKey()
+  private func typeKey(_ key: String) {
+    self.model.clearSwipe()
     self.onInsert(self.model.consume(key))
   }
+
 
   /// Delete removes a just-swiped word in one go, like Gboard; otherwise one character.
   private func deleteKey() {
@@ -191,34 +190,85 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
 
   private var letterKeys: Set<String> { Set(self.model.language.rows.joined()) }
 
-  private var swipeGesture: some Gesture {
-    DragGesture(minimumDistance: 8, coordinateSpace: .named(typingKeySpace))
-      .onChanged { value in
-        let tracker = self.swipe
-        // A new touch: if the previous drag was cancelled without ending, start over.
-        if value.startLocation != tracker.start {
-          tracker.reset()
-          tracker.start = value.startLocation
-        }
-        if tracker.isSwiping {
-          tracker.add(value.location)
-          return
-        }
-        guard
-          self.model.page == .letters, self.accentKey == nil, !self.inputDisabled, self.lexicon != nil,
-          let start = tracker.keyFrames.first(where: { self.letterKeys.contains($0.key) && $0.value.contains(value.startLocation) }),
-          hypot(value.translation.width, value.translation.height) > start.value.width * 0.8
-        else { return }
-        tracker.begin(at: value.startLocation, to: value.location)
+  /// The letter key area's single touch handler: tap to type (on lift, like the
+  /// system keyboard), hold for accents, or slide to swipe-type a word.
+  private var keyTouchGesture: some Gesture {
+    DragGesture(minimumDistance: 0, coordinateSpace: .named(typingKeySpace))
+      .onChanged { value in self.touchChanged(value) }
+      .onEnded { value in self.touchEnded(value) }
+  }
+
+  private func key(at point: CGPoint) -> String? {
+    let frames = self.swipe.keyFrames
+    if let hit = frames.first(where: { $0.value.contains(point) }) { return hit.key }
+    // Between keys: take the nearest one within half a key.
+    let nearest = frames.min { hypot($0.value.midX - point.x, $0.value.midY - point.y) < hypot($1.value.midX - point.x, $1.value.midY - point.y) }
+    guard let nearest, hypot(nearest.value.midX - point.x, nearest.value.midY - point.y) < nearest.value.width else { return nil }
+    return nearest.key
+  }
+
+  private func touchChanged(_ value: DragGesture.Value) {
+    let tracker = self.swipe
+    if value.startLocation != tracker.start {
+      // A new touch (or a previous one iOS cancelled without ending).
+      tracker.reset()
+      tracker.start = value.startLocation
+      guard !self.inputDisabled, let key = self.key(at: value.startLocation) else {
+        tracker.touchKey = nil
+        return
       }
-      .onEnded { _ in
-        let tracker = self.swipe
-        defer { tracker.start = nil }
-        guard tracker.isSwiping else { return }
-        let path = tracker.path
-        tracker.finish()
-        self.finishSwipe(path)
-      }
+      tracker.touchKey = key
+      tracker.press.pressedKey = key
+      self.onKeyPress()
+      self.scheduleAccents(for: key, touch: value.startLocation)
+      return
+    }
+    guard let touchKey = tracker.touchKey, !tracker.accentsShown else { return }
+    if tracker.isSwiping {
+      tracker.add(value.location)
+      return
+    }
+    let width = tracker.keyFrames[touchKey]?.width ?? 30
+    if self.model.page == .letters, self.lexicon != nil, self.letterKeys.contains(touchKey),
+       hypot(value.translation.width, value.translation.height) > width * 0.8 {
+      tracker.accentTask?.cancel()
+      tracker.press.pressedKey = nil
+      tracker.begin(at: value.startLocation, to: value.location)
+      self.onKeyPress()
+    } else if let current = self.key(at: value.location), current != tracker.press.pressedKey {
+      tracker.press.pressedKey = current
+    }
+  }
+
+  private func touchEnded(_ value: DragGesture.Value) {
+    let tracker = self.swipe
+    tracker.accentTask?.cancel()
+    defer {
+      tracker.start = nil
+      tracker.touchKey = nil
+      tracker.accentsShown = false
+      tracker.press.pressedKey = nil
+    }
+    guard let touchKey = tracker.touchKey, !tracker.accentsShown else { return }
+    if tracker.isSwiping {
+      let path = tracker.path
+      tracker.finish()
+      self.finishSwipe(path)
+      return
+    }
+    self.typeKey(self.key(at: value.location) ?? touchKey)
+  }
+
+  private func scheduleAccents(for key: String, touch: CGPoint) {
+    let tracker = self.swipe
+    guard self.model.page == .letters, !self.model.language.alternatives(for: key).isEmpty else { return }
+    tracker.accentTask = Task { @MainActor in
+      try? await Task.sleep(for: .milliseconds(400))
+      guard !Task.isCancelled, tracker.start == touch, !tracker.isSwiping else { return }
+      tracker.accentsShown = true
+      tracker.press.pressedKey = nil
+      self.accentKey = key
+    }
   }
 
   private var swipeTrail: some View {
@@ -375,7 +425,8 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     let keyStack = VStack(spacing: 6 * self.scale) { keys() }
       .coordinateSpace(.named(typingKeySpace))
       .onPreferenceChange(TypingKeyFramesKey.self) { self.swipe.keyFrames = $0 }
-      .simultaneousGesture(self.swipeGesture)
+      .contentShape(Rectangle())
+      .gesture(self.keyTouchGesture)
       .overlay { self.swipeTrail }
     if mode == .off {
       keyStack
@@ -438,29 +489,22 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
 
   @ViewBuilder
   private func characterKey(_ key: String) -> some View {
-    let alternatives = self.model.page == .letters ? self.model.language.alternatives(for: key) : []
-    Group {
-      if alternatives.isEmpty {
-        Button { self.tapCharacter(key) } label: {
-          Text(verbatim: self.model.displayed(key))
+    // Visual only: one touch handler on the key area (see `keyTouchGesture`) handles
+    // taps, swipes and long-press accents, so no per-key gesture can block a swipe.
+    CharacterKeyView(key: key, label: self.model.displayed(key), height: 44 * self.scale,
+                     fontSize: 23 * self.scale, press: self.swipe.press)
+      .background {
+        GeometryReader { geometry in
+          Color.clear.preference(key: TypingKeyFramesKey.self, value: [key: geometry.frame(in: .named(typingKeySpace))])
         }
-      } else {
-        Button { self.tapCharacter(key) } label: {
-          Text(verbatim: self.model.displayed(key))
-        }
-        .highPriorityGesture(LongPressGesture(minimumDuration: 0.4).onEnded { _ in self.accentKey = key })
       }
-    }
-    .font(.system(size: 23 * self.scale))
-    .buttonStyle(TypingKeyStyle(height: 44 * self.scale))
-    .background {
-      GeometryReader { geometry in
-        Color.clear.preference(key: TypingKeyFramesKey.self, value: [key: geometry.frame(in: .named(typingKeySpace))])
-      }
-    }
-    .accessibilityLabel(self.model.displayed(key))
-    .accessibilityIdentifier("typing.key.\(key)")
+      .accessibilityElement()
+      .accessibilityLabel(self.model.displayed(key))
+      .accessibilityAddTraits(.isButton)
+      .accessibilityIdentifier("typing.key.\(key)")
+      .accessibilityAction { self.typeKey(key) }
   }
+
 }
 
 private struct TypingKeyStyle: ButtonStyle {
@@ -580,8 +624,12 @@ final class SwipeTracker: ObservableObject {
   @Published private(set) var path: [CGPoint] = []
   private(set) var isSwiping = false
   var start: CGPoint?
-  var endedAt = Date.distantPast
   var lastContextRequest = Date.distantPast
+  var touchKey: String?
+  var accentsShown = false
+  var accentTask: Task<Void, Never>?
+  /// Which key shows as pressed; observed only by the key views.
+  let press = KeyPressState()
   /// Letter key frames in the key area's coordinates; not published.
   var keyFrames: [String: CGRect] = [:]
 
@@ -598,7 +646,6 @@ final class SwipeTracker: ObservableObject {
 
   func finish() {
     self.isSwiping = false
-    self.endedAt = Date()
     withAnimation(.easeOut(duration: 0.2)) { self.path = [] }
   }
 
@@ -620,5 +667,27 @@ private struct SwipeTrailView: View {
       context.stroke(path, with: .color(.accentColor.opacity(0.55)),
                      style: StrokeStyle(lineWidth: self.lineWidth, lineCap: .round, lineJoin: .round))
     }
+  }
+}
+
+@MainActor
+final class KeyPressState: ObservableObject {
+  @Published var pressedKey: String?
+}
+
+private struct CharacterKeyView: View {
+  let key: String
+  let label: String
+  let height: CGFloat
+  let fontSize: CGFloat
+  @ObservedObject var press: KeyPressState
+
+  var body: some View {
+    Text(verbatim: self.label)
+      .font(.system(size: self.fontSize))
+      .foregroundStyle(.primary)
+      .frame(maxWidth: .infinity, minHeight: self.height, maxHeight: self.height)
+      .background(TypingKeyFill(pressed: self.press.pressedKey == self.key))
+      .allowsHitTesting(false)
   }
 }
