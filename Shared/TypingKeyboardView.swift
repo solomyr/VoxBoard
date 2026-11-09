@@ -70,28 +70,9 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
       } else {
         self.oneHandedContainer {
         Group {
-          if let key = self.accentKey { self.accentPicker(key) }
-          else { self.characterRow(self.model.rows[0]) }
-          self.characterRow(self.model.rows[1])
-            .padding(.horizontal, self.model.language == .english && self.model.page == .letters ? 14 * self.scale : 0)
-          HStack(spacing: 5 * self.scale) {
-            Button {
-              self.pressKey()
-              if self.model.page == .letters { self.model.tapShift() }
-              else { self.model.page = self.model.page == .numbers ? .symbols : .numbers }
-            } label: {
-              if self.model.page == .letters {
-                Image(systemName: self.model.shift == .locked ? "capslock.fill" : self.model.shift == .once ? "shift.fill" : "shift")
-              } else { Text(self.model.page == .numbers ? "#+=" : "123").font(.system(size: 14 * self.scale)) }
-            }
-            .buttonStyle(TypingKeyStyle(height: 44 * self.scale, secondary: true))
-            .frame(width: 37 * self.scale)
-            .accessibilityLabel(self.model.page == .letters ? "Shift" : "More symbols")
-            .accessibilityValue(self.model.shift == .locked ? "Caps Lock" : self.model.shift == .once ? "Uppercase" : "Lowercase")
-            .accessibilityIdentifier("typing.shift")
-            self.characterRow(self.model.rows[2])
-            RepeatingDeleteKey(height: 44 * self.scale) { self.deleteKey() }
-              .frame(width: 37 * self.scale)
+          ZStack(alignment: .top) {
+            self.keyGrid
+            if let key = self.accentKey { self.accentPicker(key) }
           }
           HStack(spacing: 5 * self.scale) {
             Button(self.model.page == .letters ? "123" : "ABC") {
@@ -156,12 +137,9 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   }
 
   private func tapCharacter(_ key: String) {
-    // The touch that ends a swipe can also complete a tap on the key under it.
-    guard Date().timeIntervalSince(self.swipe.endedAt) > 0.3,
-          Date().timeIntervalSince(self.swipe.accentOpenedAt) > 0.6 else { return }
     // Punctuation right after a swiped word goes before its space: "hello, ".
     let attachesToWord = self.model.lastSwipeWord != nil && ",.!?;:".contains(key)
-    self.pressKey()
+    self.model.clearSwipe()
     if attachesToWord {
       self.onDelete()
       self.onInsert(key + " ")
@@ -171,8 +149,8 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   }
 
   /// Delete removes a just-swiped word in one go, like Gboard; otherwise one character.
-  private func deleteKey() {
-    self.onKeyPress()
+  private func deleteKey(haptic: Bool = true) {
+    if haptic { self.onKeyPress() }
     if let word = self.model.lastSwipeWord {
       // Deleting a swiped word right away means it was the wrong word.
       SwipeMemory.shared.learn(word, after: self.swipePrevious, language: self.model.language, weight: -1)
@@ -203,64 +181,51 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
 
 
 
-  private var letterKeys: Set<String> { Set(self.model.language.rows.joined()) }
-
-  private var swipeGesture: some Gesture {
-    DragGesture(minimumDistance: 8, coordinateSpace: .named(typingKeySpace))
-      .onChanged { value in
-        let tracker = self.swipe
-        // A new touch: if the previous drag was cancelled without ending, start over.
-        if value.startLocation != tracker.start {
-          tracker.reset()
-          tracker.start = value.startLocation
-        }
-        if tracker.isSwiping {
-          // A big jump means a new finger landed before iOS ended the previous
-          // touch: finish the previous word and start a new swipe from here.
-          let keyWidth = tracker.keyFrames.first?.value.width ?? 30
-          if let last = tracker.path.last, hypot(value.location.x - last.x, value.location.y - last.y) > keyWidth * 1.6 {
-            let path = tracker.path
-            tracker.finish()
-            self.finishSwipe(path)
-            tracker.begin(at: value.location, to: value.location)
-            self.contextRankTask?.cancel()
-            self.onKeyPress()
-            return
-          }
-          tracker.add(value.location)
-          return
-        }
-        guard
-          self.model.page == .letters, self.accentKey == nil, !self.inputDisabled, self.lexicon != nil,
-          let start = tracker.keyFrames.first(where: { self.letterKeys.contains($0.key) && $0.value.contains(value.startLocation) }),
-          hypot(value.translation.width, value.translation.height) > start.value.width * 0.8
-        else { return }
-        tracker.begin(at: value.startLocation, to: value.location)
-        self.contextRankTask?.cancel()
-        self.onKeyPress()
-      }
-      .onEnded { _ in
-        let tracker = self.swipe
-        defer { tracker.start = nil }
-        guard tracker.isSwiping else { return }
-        let path = tracker.path
-        tracker.finish()
-        self.finishSwipe(path)
-      }
+  private var gridConfig: TypingKeyGrid.Config {
+    let model = self.model
+    let letters = model.page == .letters
+    var config = TypingKeyGrid.Config()
+    config.rows = model.rows
+    config.labels = model.rows.map { $0.map { model.displayed($0) } }
+    config.lettersPage = letters
+    config.shiftSymbol = model.shift == .locked ? "capslock.fill" : model.shift == .once ? "shift.fill" : "shift"
+    config.shiftText = letters ? nil : model.page == .numbers ? "#+=" : "123"
+    config.shiftLabel = letters ? "Shift" : "More symbols"
+    config.shiftValue = model.shift == .locked ? "Caps Lock" : model.shift == .once ? "Uppercase" : "Lowercase"
+    config.rowInsets = [0, model.language == .english && letters ? 14 * self.scale : 0, 0]
+    config.scale = self.scale
+    config.disabled = self.inputDisabled
+    config.swipeEnabled = letters && self.accentKey == nil && !self.inputDisabled && self.lexicon != nil
+    config.accentKeys = letters ? Set(model.rows.joined().filter { !model.language.alternatives(for: $0).isEmpty }) : []
+    config.hidesFirstRow = self.accentKey != nil
+    return config
   }
 
-  private var swipeTrail: some View {
-    SwipeTrailView(tracker: self.swipe, lineWidth: 7 * self.scale).allowsHitTesting(false)
-  }
-
-  private func finishSwipe(_ path: [CGPoint]) {
-    guard let lexicon = self.lexicon else { return }
-    let letters = self.swipe.keyFrames.filter { self.letterKeys.contains($0.key) }
-    guard let size = letters.first?.value.size else { return }
-    var centers: [Character: CGPoint] = [:]
-    for (key, frame) in letters {
-      if let character = key.first { centers[character] = CGPoint(x: frame.midX, y: frame.midY) }
+  private var keyGrid: some View {
+    var handlers = TypingKeyGrid.Handlers()
+    handlers.keyDown = self.onKeyPress
+    handlers.tap = { self.tapCharacter($0) }
+    handlers.shift = {
+      self.model.clearSwipe()
+      if self.model.page == .letters { self.model.tapShift() }
+      else { self.model.page = self.model.page == .numbers ? .symbols : .numbers }
     }
+    handlers.delete = { self.deleteKey(haptic: false) }
+    handlers.longPress = { key in self.accentKey = key }
+    handlers.swipeBegan = {
+      self.swipe.isSwiping = true
+      self.contextRankTask?.cancel()
+    }
+    handlers.swipe = { path, centers, size in
+      self.swipe.isSwiping = false
+      self.finishSwipe(path, centers: centers, keySize: size)
+    }
+    return TypingKeyGrid(config: self.gridConfig, handlers: handlers)
+      .frame(height: TypingKeyGrid.Config.height(scale: self.scale))
+  }
+
+  private func finishSwipe(_ path: [CGPoint], centers: [Character: CGPoint], keySize size: CGSize) {
+    guard let lexicon = self.lexicon else { return }
     let language = self.model.language
     let previous = SwipeMemory.previousWord(in: self.model.contextBefore, locale: language.locale)
     let snapshot = SwipeMemory.shared.snapshot(language: language)
@@ -305,9 +270,10 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   private func askContextModel(ranked: [(word: String, cost: CGFloat)], inserted: String, previous: String?) {
     self.contextRankTask?.cancel()
     guard ranked.count > 1, let context = self.model.contextBefore, !context.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-    let close = ranked.filter { $0.cost - ranked[0].cost < 0.6 }.map(\.word)
-    // The on-device model costs real battery; skip it while you swipe in quick succession.
-    guard close.count > 1, Date().timeIntervalSince(self.swipe.lastContextRequest) > 1.2 else { return }
+    // Only a near tie is worth asking about: the on-device model costs real battery.
+    let close = ranked.filter { $0.cost - ranked[0].cost < 0.35 }.map(\.word)
+    // Skip it while you swipe in quick succession.
+    guard close.count > 1, Date().timeIntervalSince(self.swipe.lastContextRequest) > 2 else { return }
     self.swipe.lastContextRequest = Date()
     let language = self.model.language
     let before = String(context.dropLast(inserted.count + 1))
@@ -428,10 +394,6 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
   private func oneHandedContainer(@ViewBuilder _ keys: () -> some View) -> some View {
     let mode = self.model.oneHanded
     let keyStack = VStack(spacing: 6 * self.scale) { keys() }
-      .coordinateSpace(.named(typingKeySpace))
-      .onPreferenceChange(TypingKeyFramesKey.self) { self.swipe.keyFrames = $0 }
-      .simultaneousGesture(self.swipeGesture)
-      .overlay { self.swipeTrail }
     if mode == .off {
       keyStack
     } else {
@@ -464,41 +426,14 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     .font(.system(size: 23 * self.scale))
   }
 
-  private func characterRow(_ keys: [String]) -> some View {
-    HStack(spacing: 5 * self.scale) {
-      ForEach(keys, id: \.self) { self.characterKey($0) }
-    }
-  }
-
-  @ViewBuilder
+  /// Comma and period on the bottom row; the letter rows live in `TypingKeyGrid`.
   private func characterKey(_ key: String) -> some View {
-    let alternatives = self.model.page == .letters ? self.model.language.alternatives(for: key) : []
-    Group {
-      if alternatives.isEmpty {
-        Button { self.tapCharacter(key) } label: {
-          Text(verbatim: self.model.displayed(key))
-        }
-      } else {
-        Button { self.tapCharacter(key) } label: {
-          Text(verbatim: self.model.displayed(key))
-        }
-        // Simultaneous, not high-priority: a high-priority long press grabbed the
-        // touch and swallowed every swipe that started on a key with accents.
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.4).onEnded { _ in
-          guard !self.swipe.isSwiping else { return }
-          self.swipe.accentOpenedAt = Date()
-          self.accentKey = key
-        })
-      }
+    Button { self.onKeyPress(); self.tapCharacter(key) } label: {
+      Text(verbatim: key)
     }
     .font(.system(size: 23 * self.scale))
     .buttonStyle(TypingKeyStyle(height: 44 * self.scale))
-    .background {
-      GeometryReader { geometry in
-        Color.clear.preference(key: TypingKeyFramesKey.self, value: [key: geometry.frame(in: .named(typingKeySpace))])
-      }
-    }
-    .accessibilityLabel(self.model.displayed(key))
+    .accessibilityLabel(key)
     .accessibilityIdentifier("typing.key.\(key)")
   }
 }
@@ -605,65 +540,12 @@ private struct TypingSpaceKey: View {
   }
 }
 
-private struct TypingKeyFramesKey: PreferenceKey {
-  static let defaultValue: [String: CGRect] = [:]
-  static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-    value.merge(nextValue()) { $1 }
-  }
-}
-
-private let typingKeySpace = "typingKeys"
-
-/// Finger path for the swipe trail. Only `SwipeTrailView` observes it.
+/// Swipe bookkeeping for the context model; not observed, so it never redraws anything.
 @MainActor
-final class SwipeTracker: ObservableObject {
-  @Published private(set) var path: [CGPoint] = []
-  private(set) var isSwiping = false
-  var start: CGPoint?
-  var endedAt = Date.distantPast
-  var accentOpenedAt = Date.distantPast
+final class SwipeTracker {
+  var isSwiping = false
   var lastContextRequest = Date.distantPast
-  /// Letter key frames in the key area's coordinates; not published.
-  var keyFrames: [String: CGRect] = [:]
-
-  func begin(at start: CGPoint, to point: CGPoint) {
-    self.isSwiping = true
-    self.path = [start, point]
-  }
-
-  func add(_ point: CGPoint) {
-    // Skip points closer than 3 pt; the decoder resamples anyway.
-    if let last = self.path.last, hypot(point.x - last.x, point.y - last.y) < 3 { return }
-    self.path.append(point)
-  }
-
-  func finish() {
-    self.isSwiping = false
-    self.endedAt = Date()
-    withAnimation(.easeOut(duration: 0.2)) { self.path = [] }
-  }
-
-  func reset() {
-    self.isSwiping = false
-    if !self.path.isEmpty { self.path = [] }
-  }
 }
-
-private struct SwipeTrailView: View {
-  @ObservedObject var tracker: SwipeTracker
-  let lineWidth: CGFloat
-
-  var body: some View {
-    Canvas { context, _ in
-      guard self.tracker.path.count > 1 else { return }
-      var path = Path()
-      path.addLines(self.tracker.path)
-      context.stroke(path, with: .color(.accentColor.opacity(0.55)),
-                     style: StrokeStyle(lineWidth: self.lineWidth, lineCap: .round, lineJoin: .round))
-    }
-  }
-}
-
 
 extension EnvironmentValues {
   /// True while swipe suggestions share the top row, so toolbars can drop their status text.

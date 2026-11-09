@@ -44,12 +44,16 @@ final class SwipeLexicon: @unchecked Sendable {
     language.rawValue.hasPrefix("bg") ? "bg" : language.rawValue
   }
 
-  /// Loads the bundled list for a layout, or nil when none is bundled. Parsed lists are
-  /// cached, so reopening the keyboard does not re-read 30,000 words each time.
+  /// Loads the bundled list for a layout, or nil when none is bundled. The parsed list
+  /// for the current layout is cached, so reopening the keyboard does not re-read
+  /// 30,000 words each time; switching layouts frees the previous one.
   static func load(_ language: KeyboardLanguage) -> SwipeLexicon? {
     if let cached = self.cache.withLock({ $0[language] }) { return cached }
     let loaded = self.loadUncached(language)
-    if let loaded { self.cache.withLock { $0[language] = loaded } }
+    self.cache.withLock { cache in
+      cache.removeAll()
+      if let loaded { cache[language] = loaded }
+    }
     return loaded
   }
 

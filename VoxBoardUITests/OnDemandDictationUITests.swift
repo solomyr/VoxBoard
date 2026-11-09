@@ -93,6 +93,8 @@ final class OnDemandDictationUITests: XCTestCase {
     XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
     host.textViews["fixture.text"].tap()
     self.selectVoxBoard(in: host)
+    host.buttons["typing.languages"].tap()
+    host.buttons["typing.language.en"].tap()
     print("BTNTEST ids before: " + host.buttons.allElementsBoundByIndex.map(\.identifier).filter { $0.hasPrefix("typing") && !$0.hasPrefix("typing.key") }.joined(separator: ","))
     if !host.buttons["typing.oneHanded.expand"].exists { host.buttons["typing.oneHanded.toggle"].tap(); sleep(1) }
     print("BTNTEST ids after toggle: " + host.buttons.allElementsBoundByIndex.map(\.identifier).filter { $0.hasPrefix("typing") && !$0.hasPrefix("typing.key") }.joined(separator: ","))
@@ -125,6 +127,8 @@ final class OnDemandDictationUITests: XCTestCase {
     host.buttons["Clear test text"].tap()
     host.textViews["fixture.text"].tap()
     self.selectVoxBoard(in: host)
+    host.buttons["typing.languages"].tap()
+    host.buttons["typing.language.en"].tap()
     let field = host.textViews["fixture.text"]
     var log: [String] = []
     for (from, to) in [("t", "o"), ("f", "j"), ("t", "o"), ("f", "j"), ("t", "o"), ("f", "j")] {
