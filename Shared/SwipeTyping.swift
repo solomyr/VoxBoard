@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import os
 
 /// Word list for swipe typing, mapped onto one keyboard layout's keys.
 /// Lists come from FrequencyWords (Hermit Dave, CC BY-SA 4.0), most frequent first.
@@ -43,8 +44,21 @@ final class SwipeLexicon: @unchecked Sendable {
     language.rawValue.hasPrefix("bg") ? "bg" : language.rawValue
   }
 
-  /// Loads the bundled list for a layout, or nil when none is bundled.
+  /// Loads the bundled list for a layout, or nil when none is bundled. Parsed lists are
+  /// cached, so reopening the keyboard does not re-read 30,000 words each time.
   static func load(_ language: KeyboardLanguage) -> SwipeLexicon? {
+    if let cached = self.cache.withLock({ $0[language] }) { return cached }
+    let loaded = self.loadUncached(language)
+    if let loaded { self.cache.withLock { $0[language] = loaded } }
+    return loaded
+  }
+
+  /// Every word in the list, for checking whether a learned word is new.
+  private(set) lazy var allWords: Set<String> = Set(self.entriesByFirstKey.values.flatMap { $0.map(\.word) })
+
+  private static let cache = OSAllocatedUnfairLock<[KeyboardLanguage: SwipeLexicon]>(initialState: [:])
+
+  private static func loadUncached(_ language: KeyboardLanguage) -> SwipeLexicon? {
     let name = "swipe-\(Self.fileCode(for: language))"
     let bundles = [Bundle.main, Bundle(for: SwipeLexicon.self)]
     guard
@@ -255,7 +269,7 @@ final class SwipeMemory {
 
   /// Words you have used at least twice that the bundled list lacks.
   func extraWords(language: KeyboardLanguage, excluding lexicon: SwipeLexicon) -> [String] {
-    let known = Set(lexicon.entriesByFirstKey.values.flatMap { $0.map(\.word) })
+    let known = lexicon.allWords
     return self.store(for: language).words.filter { $0.value >= 2 && !known.contains($0.key) }.map(\.key)
   }
 

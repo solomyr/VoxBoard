@@ -27,7 +27,7 @@ final class LLMProcessingCoordinator: ObservableObject {
     let settings = SharedSettings()
     settings.isLLMProcessing = true
     defer {
-      self.inferenceService.unloadModel()
+      self.releaseModelWhenIdle()
       self.isProcessing = false
       settings.isLLMProcessing = false
     }
@@ -133,8 +133,28 @@ final class LLMProcessingCoordinator: ObservableObject {
       TranscriptionBridge.postDarwinNotification(DarwinNotificationName.llmProcessingFailed)
     }
 
-    self.inferenceService.unloadModel()
+    self.releaseModelWhenIdle()
   }
+
+  /// Devices with plenty of memory keep the text model (and the speech model) loaded
+  /// between dictations, so back-to-back messages don't reload gigabytes from disk each
+  /// time; it is released after two idle minutes. Smaller devices release it at once.
+  static let keepsModelsLoaded = ProcessInfo.processInfo.physicalMemory >= 7_000_000_000
+
+  private func releaseModelWhenIdle() {
+    self.idleUnloadTask?.cancel()
+    guard Self.keepsModelsLoaded else {
+      self.inferenceService.unloadModel()
+      return
+    }
+    self.idleUnloadTask = Task { @MainActor [weak self] in
+      try? await Task.sleep(for: .seconds(120))
+      guard let self, !Task.isCancelled, !self.isProcessing else { return }
+      self.inferenceService.unloadModel()
+    }
+  }
+
+  private var idleUnloadTask: Task<Void, Never>?
 
   private func validateRequest(settings: SharedSettings) -> ValidatedRequest? {
     settings.synchronize()
@@ -182,8 +202,13 @@ final class LLMProcessingCoordinator: ObservableObject {
   }
 
   private func prepareForInference(variant: LLMModelVariant, modelPath: String) async {
+    self.idleUnloadTask?.cancel()
     if let speechService = self.speechService {
-      await speechService.unloadForLLMProcessing()
+      if Self.keepsModelsLoaded {
+        if speechService.isRecording { await speechService.stopRecording() }
+      } else {
+        await speechService.unloadForLLMProcessing()
+      }
     }
 
     if self.inferenceService.loadState != .loaded {

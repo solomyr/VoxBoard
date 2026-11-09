@@ -277,7 +277,9 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     self.contextRankTask?.cancel()
     guard ranked.count > 1, let context = self.model.contextBefore, !context.trimmingCharacters(in: .whitespaces).isEmpty else { return }
     let close = ranked.filter { $0.cost - ranked[0].cost < 0.6 }.map(\.word)
-    guard close.count > 1 else { return }
+    // The on-device model costs real battery; skip it while you swipe in quick succession.
+    guard close.count > 1, Date().timeIntervalSince(self.swipe.lastContextRequest) > 1.2 else { return }
+    self.swipe.lastContextRequest = Date()
     let language = self.model.language
     let before = String(context.dropLast(inserted.count))
     self.contextRankTask = Task { @MainActor in
@@ -579,6 +581,7 @@ final class SwipeTracker: ObservableObject {
   private(set) var isSwiping = false
   var start: CGPoint?
   var endedAt = Date.distantPast
+  var lastContextRequest = Date.distantPast
   /// Letter key frames in the key area's coordinates; not published.
   var keyFrames: [String: CGRect] = [:]
 
