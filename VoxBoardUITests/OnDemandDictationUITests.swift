@@ -117,6 +117,32 @@ final class OnDemandDictationUITests: XCTestCase {
     if host.buttons["typing.language.en"].exists { host.buttons["typing.language.en"].tap() }
   }
 
+  func testSpaceFlickInInstalledKeyboard() throws {
+    self.continueAfterFailure = true
+    let host = XCUIApplication(bundleIdentifier: "dev.voxboard.keyboardfixture")
+    host.launch()
+    defer { host.terminate() }
+    XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
+    host.buttons["Clear test text"].tap()
+    host.textViews["fixture.text"].tap()
+    self.selectVoxBoard(in: host)
+    for language in ["en", "bg-phonetic"] {
+      host.buttons["typing.languages"].tap()
+      host.buttons["typing.language.\(language)"].tap()
+    }
+    let space = host.buttons["typing.space"]
+    let start = space.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+    start.press(forDuration: 0.01, thenDragTo: start.withOffset(CGVector(dx: -120, dy: 0)), withVelocity: 1500, thenHoldForDuration: 0)
+    XCTAssertTrue(host.buttons["typing.key.q"].waitForExistence(timeout: 3), "Flick switches to English")
+    host.buttons["typing.key.h"].tap()
+    host.buttons["typing.key.i"].tap()
+    space.tap()
+    let slow = space.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+    slow.press(forDuration: 0.5, thenDragTo: slow.withOffset(CGVector(dx: -40, dy: 0)), withVelocity: 60, thenHoldForDuration: 0.2)
+    host.buttons["typing.key.o"].tap()
+    print("FLICKTEST text: '\(host.textViews["fixture.text"].value as? String ?? "nil")' english=\(host.buttons["typing.key.q"].exists)")
+  }
+
   /// Second swipe starts immediately after the first word lands.
   func testRapidSwipesInInstalledKeyboard() throws {
     self.continueAfterFailure = true
