@@ -215,6 +215,18 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
           tracker.start = value.startLocation
         }
         if tracker.isSwiping {
+          // A big jump means a new finger landed before iOS ended the previous
+          // touch: finish the previous word and start a new swipe from here.
+          let keyWidth = tracker.keyFrames.first?.value.width ?? 30
+          if let last = tracker.path.last, hypot(value.location.x - last.x, value.location.y - last.y) > keyWidth * 1.6 {
+            let path = tracker.path
+            tracker.finish()
+            self.finishSwipe(path)
+            tracker.begin(at: value.location, to: value.location)
+            self.contextRankTask?.cancel()
+            self.onKeyPress()
+            return
+          }
           tracker.add(value.location)
           return
         }
@@ -224,6 +236,7 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
           hypot(value.translation.width, value.translation.height) > start.value.width * 0.8
         else { return }
         tracker.begin(at: value.startLocation, to: value.location)
+        self.contextRankTask?.cancel()
         self.onKeyPress()
       }
       .onEnded { _ in
@@ -299,8 +312,14 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     let language = self.model.language
     let before = String(context.dropLast(inserted.count + 1))
     self.contextRankTask = Task { @MainActor in
+      // Only once you pause, and off the main thread, so it never delays the next swipe.
+      try? await Task.sleep(for: .milliseconds(700))
+      guard !Task.isCancelled, !self.swipe.isSwiping else { return }
+      let picked = await Task.detached(priority: .utility) {
+        await SwipeContextRanker.choose(context: before, candidates: close, language: language)
+      }.value
       guard
-        let choice = await SwipeContextRanker.choose(context: before, candidates: close, language: language),
+        let choice = picked,
         !Task.isCancelled, self.model.lastSwipeWord == inserted,
         choice.lowercased(with: language.locale) != inserted.lowercased(with: language.locale)
       else { return }

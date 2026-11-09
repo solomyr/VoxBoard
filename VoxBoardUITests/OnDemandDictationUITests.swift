@@ -115,6 +115,29 @@ final class OnDemandDictationUITests: XCTestCase {
     if host.buttons["typing.language.en"].exists { host.buttons["typing.language.en"].tap() }
   }
 
+  /// Second swipe starts immediately after the first word lands.
+  func testRapidSwipesInInstalledKeyboard() throws {
+    self.continueAfterFailure = true
+    let host = XCUIApplication(bundleIdentifier: "dev.voxboard.keyboardfixture")
+    host.launch()
+    defer { host.terminate() }
+    XCTAssertTrue(host.textViews["fixture.text"].waitForExistence(timeout: 10))
+    host.buttons["Clear test text"].tap()
+    host.textViews["fixture.text"].tap()
+    self.selectVoxBoard(in: host)
+    let field = host.textViews["fixture.text"]
+    var log: [String] = []
+    for (from, to) in [("t", "o"), ("f", "j"), ("t", "o"), ("f", "j"), ("t", "o"), ("f", "j")] {
+      let start = host.buttons["typing.key.\(from)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      let end = host.buttons["typing.key.\(to)"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      start.press(forDuration: 0.02, thenDragTo: end, withVelocity: 900, thenHoldForDuration: 0.01)
+      log.append(field.value as? String ?? "")
+    }
+    sleep(2)
+    print("RAPIDTEST words: '\(field.value as? String ?? "nil")'")
+    print("RAPIDTEST steps: \(log)")
+  }
+
   func testKeyboardHandsOffOnceThenRecordsInPlace() throws {
     self.continueAfterFailure = false
     let app = XCUIApplication()
