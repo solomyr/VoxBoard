@@ -13,6 +13,9 @@ struct TouchButton<Label: View>: View {
     self.label
       .foregroundStyle(.tint)
       .opacity(self.isPressed ? 0.45 : (self.isEnabled ? 1 : 0.35))
+      // Inside a keyboard, fully transparent pixels receive no touches at all,
+      // so give the whole button area an invisible but drawn background.
+      .background(Color.black.opacity(0.001))
       .contentShape(Rectangle())
       .gesture(
         DragGesture(minimumDistance: 0)

@@ -53,24 +53,13 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
         }
         .accessibilityLabel(self.model.oneHanded == .off ? "One-handed keyboard" : "Full width keyboard")
         .accessibilityIdentifier("typing.oneHanded.toggle")
-        if self.model.oneHanded != .off {
-          // In the top row because buttons beside the keys get no touches inside the keyboard.
-          TouchButton {
-            self.pressKey()
-            self.model.oneHanded = self.model.oneHanded == .left ? .right : .left
-          } label: {
-            Image(systemName: self.model.oneHanded == .left ? "chevron.right" : "chevron.left")
-              .frame(minWidth: 32, minHeight: 44 * self.scale)
-              .contentShape(Rectangle())
-          }
-          .accessibilityLabel(self.model.oneHanded == .left ? "Move keyboard right" : "Move keyboard left")
-          .accessibilityIdentifier("typing.oneHanded.move")
-        }
-        if self.model.swipeSuggestions.isEmpty {
-          self.toolbar()
-        } else {
+
+        if !self.model.swipeSuggestions.isEmpty {
           self.swipeSuggestionBar
         }
+        // Suggestions share the row; the toolbar's buttons and mic stay visible.
+        self.toolbar()
+          .environment(\.typingSuggestionsShown, !self.model.swipeSuggestions.isEmpty)
       }
       .font(.system(size: 15 * self.scale))
       .padding(.horizontal, 6 * self.scale)
@@ -382,6 +371,26 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     .accessibilityIdentifier("typing.oneHanded.\(mode.rawValue)")
   }
 
+  private func oneHandedStrip(moveTo side: OneHandedMode) -> some View {
+    VStack(spacing: 12 * self.scale) {
+      TouchButton { self.pressKey(); self.model.oneHanded = .off } label: {
+        Image(systemName: "arrow.up.left.and.arrow.down.right")
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      .accessibilityLabel("Full width keyboard")
+      .accessibilityIdentifier("typing.oneHanded.expand")
+      TouchButton { self.pressKey(); self.model.oneHanded = side } label: {
+        Image(systemName: side == .left ? "chevron.left" : "chevron.right")
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      .accessibilityLabel(side == .left ? "Move keyboard left" : "Move keyboard right")
+      .accessibilityIdentifier("typing.oneHanded.move")
+    }
+    .font(.system(size: 20 * self.scale, weight: .medium))
+    .foregroundStyle(.secondary)
+    .frame(maxHeight: .infinity)
+  }
+
   /// In one-handed mode the keys take most of the width on one side; the free
   /// strip holds a button to move the keys across and one to go back to full width.
   @ViewBuilder
@@ -395,11 +404,12 @@ struct TypingKeyboardView<Toolbar: View, Globe: View>: View {
     if mode == .off {
       keyStack
     } else {
-      // The free strip stays empty: buttons there received no touches inside the
-      // keyboard, so moving sides and expanding live in the top row.
       let strip: CGFloat = 64 * self.scale
-      keyStack
-        .padding(mode == .right ? .leading : .trailing, strip)
+      HStack(spacing: 0) {
+        if mode == .right { self.oneHandedStrip(moveTo: .left).frame(width: strip) }
+        keyStack
+        if mode == .left { self.oneHandedStrip(moveTo: .right).frame(width: strip) }
+      }
 
     }
   }
@@ -621,4 +631,10 @@ private struct SwipeTrailView: View {
                      style: StrokeStyle(lineWidth: self.lineWidth, lineCap: .round, lineJoin: .round))
     }
   }
+}
+
+
+extension EnvironmentValues {
+  /// True while swipe suggestions share the top row, so toolbars can drop their status text.
+  @Entry var typingSuggestionsShown = false
 }

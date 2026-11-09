@@ -399,7 +399,9 @@ extension KeyboardViewController {
     let keyboardView = KeyboardView(proxy: proxy, keyboardState: self.keyboardState)
     let hosting = UIHostingController(rootView: keyboardView)
     hosting.safeAreaRegions = []
-    hosting.view.backgroundColor = .clear
+    // Not fully clear: inside a keyboard, transparent pixels receive no touches,
+    // so empty areas (gaps, side strip) would swallow taps and swipe starts.
+    hosting.view.backgroundColor = UIColor(white: 0, alpha: 0.01)
     hosting.view.translatesAutoresizingMaskIntoConstraints = false
 
     self.addChild(hosting)

@@ -88,12 +88,18 @@ struct StandardKeyboardLayout: View {
   }
 
   private var toolbar: some View {
+    SuggestionAware { suggestionsShown in self.toolbarRow(suggestionsShown: suggestionsShown) }
+  }
+
+  private func toolbarRow(suggestionsShown: Bool) -> some View {
     HStack(spacing: 8) {
-      Spacer(minLength: 0)
-      if self.busy { ProgressView().controlSize(.small) }
-      Text(self.statusTitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-        .accessibilityIdentifier("typing.status")
-      Spacer(minLength: 0)
+      if !suggestionsShown {
+        Spacer(minLength: 0)
+        if self.busy { ProgressView().controlSize(.small) }
+        Text(self.statusTitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+          .accessibilityIdentifier("typing.status")
+        Spacer(minLength: 0)
+      }
       if self.keyboardState.hasLLMHistory {
         TouchButton { self.proxy.undoLLM() } label: { Image(systemName: "arrow.uturn.backward") }
           .disabled(!self.keyboardState.canUndoLLM || self.busy || self.keyboardState.isRecording)
@@ -204,4 +210,11 @@ struct StandardKeyboardLayout: View {
     }
     return false
   }
+}
+
+/// Reads whether swipe suggestions share the top row, at the toolbar's own position.
+private struct SuggestionAware<Content: View>: View {
+  @Environment(\.typingSuggestionsShown) private var shown
+  let content: (Bool) -> Content
+  var body: some View { self.content(self.shown) }
 }
