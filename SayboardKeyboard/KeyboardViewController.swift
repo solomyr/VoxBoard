@@ -34,6 +34,11 @@ final class KeyboardViewController: UIInputViewController {
 
   override func updateViewConstraints() {
     super.updateViewConstraints()
+    self.ensureHeightConstraint()
+  }
+
+  /// Asks for the keyboard's height as early as possible, so the first frame is already right.
+  private func ensureHeightConstraint() {
     if self.heightConstraint == nil {
       for constraint in view.constraintsAffectingLayout(for: .vertical) {
         constraint.priority = .defaultHigh
@@ -139,7 +144,6 @@ final class KeyboardViewController: UIInputViewController {
   private static var modelLoadingFailedObserver: DarwinNotificationObserver?
 
   private var heightConstraint: NSLayoutConstraint?
-  private var hostingHeightConstraint: NSLayoutConstraint?
   private var actionBarVisible = false
   private var statusStripHeight: CGFloat = 0
 
@@ -411,16 +415,16 @@ extension KeyboardViewController {
     self.view.addSubview(hosting.view)
     hosting.didMove(toParent: self)
 
-    let kind = self.keyboardState.keyboardKind
-    let initialHeight = KeyboardMetrics.totalHeight(actionBarVisible: false, kind: kind)
-    let hostingHeight = hosting.view.heightAnchor.constraint(equalToConstant: initialHeight)
+    // Fill the keyboard view instead of using a fixed height pinned to the bottom: some
+    // hosts (Type to Siri) first show the keyboard shorter than asked, and a fixed-height
+    // view hanging below the visible area cut the bottom row off until the next layout.
     NSLayoutConstraint.activate([
       hosting.view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
       hosting.view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+      hosting.view.topAnchor.constraint(equalTo: self.view.topAnchor),
       hosting.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-      hostingHeight,
     ])
-    self.hostingHeightConstraint = hostingHeight
+    self.ensureHeightConstraint()
 
     self.hostingController = hosting
   }
@@ -434,7 +438,6 @@ extension KeyboardViewController {
     let target = base + self.statusStripHeight
     guard hc.constant != target else { return }
     hc.constant = target
-    self.hostingHeightConstraint?.constant = target
     UIView.performWithoutAnimation {
       self.view.layoutIfNeeded()
       self.view.superview?.layoutIfNeeded()
