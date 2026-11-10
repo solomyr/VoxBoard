@@ -143,6 +143,37 @@ final class OnDemandDictationUITests: XCTestCase {
     print("FLICKTEST text: '\(host.textViews["fixture.text"].value as? String ?? "nil")' english=\(host.buttons["typing.key.q"].exists)")
   }
 
+  /// Home screen pull-down search (Siri / Spotlight) with VoxBoard: screenshots right as
+  /// the keyboard appears, to catch a first frame with the bottom row cut off.
+  func testHomeSearchKeyboardFirstFrames() throws {
+    self.continueAfterFailure = true
+    let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+    func shoot(_ name: String) {
+      let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+      shot.name = name
+      shot.lifetime = .keepAlways
+      add(shot)
+    }
+    for round in 0 ..< 3 {
+      XCUIDevice.shared.press(.home)
+      sleep(1)
+      let start = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+      start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 250)))
+      if round == 0 {
+        sleep(2)
+        self.selectVoxBoard(in: springboard)
+        XCUIDevice.shared.press(.home)
+        sleep(1)
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 250)))
+      }
+      for (index, delay) in [100_000, 200_000, 300_000, 500_000, 800_000, 1_500_000, 3_000_000].enumerated() {
+        usleep(useconds_t(index == 0 ? delay : delay - [100_000, 200_000, 300_000, 500_000, 800_000, 1_500_000, 3_000_000][index - 1]))
+        shoot("round\(round)-\(delay / 1000)ms")
+      }
+    }
+    XCUIDevice.shared.press(.home)
+  }
+
   /// Second swipe starts immediately after the first word lands.
   func testRapidSwipesInInstalledKeyboard() throws {
     self.continueAfterFailure = true

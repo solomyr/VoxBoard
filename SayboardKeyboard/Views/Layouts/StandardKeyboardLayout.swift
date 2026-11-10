@@ -35,7 +35,6 @@ struct StandardKeyboardLayout: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      self.statusBanner
       TypingKeyboardView(
         model: self.keyboardState.typing,
         scale: KeyboardMetrics.scale,
@@ -52,6 +51,9 @@ struct StandardKeyboardLayout: View {
         globe: { GlobeKey(fixedWidth: 36.kbScaled) },
       )
     }
+    // Messages float over the top row instead of making the keyboard taller: hosts such as
+    // the home-screen Siri search don't grow the keyboard, which cut the bottom row off.
+    .overlay(alignment: .top) { self.statusBanner }
     .onAppear { self.proxy.setActionBarVisible(false) }
     .onChange(of: self.keyboardState.isRecording) { _, recording in
       if recording { self.notice = nil }
@@ -79,13 +81,10 @@ struct StandardKeyboardLayout: View {
         DictationOutcomeLabel(outcome: outcome) { self.keyboardState.dictationOutcome = nil }
       }
     }
-    .background {
-      GeometryReader { geometry in
-        Color.clear
-          .onAppear { self.proxy.setStatusStripHeight(geometry.size.height) }
-          .onChange(of: geometry.size.height) { _, height in self.proxy.setStatusStripHeight(height) }
-      }
-    }
+    .frame(minHeight: 44.kbScaled)
+    .background(Color(uiColor: .secondarySystemBackground))
+    .opacity(self.keyboardState.llmError != nil || self.notice != nil || self.keyboardState.dictationOutcome != nil ? 1 : 0)
+    .allowsHitTesting(self.keyboardState.llmError != nil || self.notice != nil || self.keyboardState.dictationOutcome != nil)
   }
 
   private var toolbar: some View {
