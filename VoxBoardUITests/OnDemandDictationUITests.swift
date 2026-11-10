@@ -270,6 +270,9 @@ final class OnDemandDictationUITests: XCTestCase {
         }
       }
       XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: settled, object: nil)], timeout: 10), .completed)
+      // Recording keeps going until you stop it (it once stopped by itself after a few words).
+      sleep(8)
+      XCTAssertTrue(recording.exists, "Recording stopped by itself (attempt \(attempt)).")
       let attachment = XCTAttachment(screenshot: host.screenshot())
       attachment.name = "Keyboard recording \(attempt)"
       attachment.lifetime = .keepAlways
