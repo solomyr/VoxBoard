@@ -104,7 +104,10 @@ final class KeyboardViewController: UIInputViewController {
       DiagnosticLog.write("keyboard: NO TEXT available to insert")
       let settings = SharedSettings()
       settings.synchronize()
+      // Show a failed dictation's message once, right after it happened. It used to stay
+      // stored, so every later keyboard opening showed "No speech recognized" again.
       if let outcome = settings.lastDictationOutcome {
+        settings.lastDictationOutcome = nil
         self.keyboardState.dictationOutcome = outcome
       }
       return
